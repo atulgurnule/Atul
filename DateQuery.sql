@@ -26,3 +26,15 @@ select * from swlive..ttccom100100   where convert(date, t_stdt) >= '2020-05-13'
 select [t_bpid], [t_ctit], [t_nama], [t_seak], [t_prbp], [t_prst], [t_stdt] from swlive..ttccom100100 group by t_stdt order by t_stdt
 
 
+SELECT ord.OrderID,ord.EmployeeID,ord.OrderDate,
+Case When ord.EmployeeID=p2.EmployeeID THEN 'E' ELSE 'N' END AS Category_Marker
+from Orders as ord left join(
+				select OrderID,EmployeeID,OrderDate
+				from Northwind.dbo.Orders
+				where OrderDate >= (DATEADD(year,-25,GETDATE()))
+				group by OrderID,EmployeeID,OrderDate) p2 
+				on (p2.OrderID=ord.OrderID)
+				where ord.OrderDate >= (DATEADD(year,-26,GETDATE())) 
+				group by ord.OrderID,ord.EmployeeID,ord.OrderDate,p2.EmployeeID
+
+
