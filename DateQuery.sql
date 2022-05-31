@@ -36,5 +36,16 @@ from Orders as ord left join(
 				on (p2.OrderID=ord.OrderID)
 				where ord.OrderDate >= (DATEADD(year,-26,GETDATE())) 
 				group by ord.OrderID,ord.EmployeeID,ord.OrderDate,p2.EmployeeID
+				
+Max(Date) Query
+
+(select o1.EmployeeID,o1.ShipName,o1.ShipCity,sum(maxOrderDate.Freight) as TotalFreight from Orders as o1
+join (
+select OrderID,EmployeeID,max(OrderDate) as maxOrderDate,sum(Freight) as Freight,
+ROW_NUMBER() OVER (ORDER BY EmployeeID) AS RowNum  
+from Orders group by OrderID,EmployeeID 
+) maxOrderDate
+on maxOrderDate.OrderID=o1.OrderID group by 
+o1.EmployeeID,o1.ShipName,o1.ShipCity) 
 
 
