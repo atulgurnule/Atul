@@ -1,3 +1,4 @@
+
 select * from Categories
 select * from Products
 
@@ -15,14 +16,14 @@ INNER JOIN products prod ON cat.CategoryID=prod.CategoryID
 SELECT dense_rank() over(ORDER BY cat.categoryid) CategoryWiseRowNum,
                     cat.CategoryName,
                     ROW_NUMBER() over(PARTITION BY cat.categoryid
-                                      ORDER BY prod.productid) ProductWiseRowNum,
-                                 prod.ProductName
+                    ORDER BY prod.productid) ProductWiseRowNum,
+                    prod.ProductName
 FROM Categories cat
 INNER JOIN products prod ON cat.CategoryID=prod.CategoryID
 
 SELECT prod.ProductName,
        sum(ord.Quantity*ord.UnitPrice) [TotalAmout]
-FROM [Order Details] ord
+FROM [OrderDetails] ord
 INNER JOIN Products prod ON ord.ProductID=prod.ProductID
 GROUP BY prod.ProductName 
 
@@ -34,7 +35,7 @@ SELECT productname,
 FROM
   (SELECT prod.ProductName,
           sum(ord.Quantity*ord.UnitPrice) [TotalAmout]
-   FROM [Order Details] ord
+   FROM [OrderDetails] ord
    INNER JOIN Products prod ON ord.ProductID=prod.ProductID
    GROUP BY prod.ProductName) t
 
@@ -47,7 +48,7 @@ FROM
   (SELECT prod.CategoryID,
           prod.ProductName,
           sum(ord.Quantity*ord.UnitPrice) [TotalAmout]
-   FROM [Order Details] ord
+   FROM [OrderDetails] ord
    INNER JOIN Products prod ON ord.ProductID=prod.ProductID
    GROUP BY prod.ProductName,
             prod.CategoryID) t
@@ -74,6 +75,7 @@ WITH CTE AS
                                                       ORDER BY ord.orderdate) [PreviousOrderDate]
    FROM orders ord
    INNER JOIN Customers cust ON ord.CustomerID=cust.CustomerID)
+
 SELECT CustomerID,
        CompanyName,
        ISNULL(DATEDIFF(dd,OrderDate,isnull(NextOrderDate,OrderDate)),0) [NextDateDifference],
@@ -107,6 +109,7 @@ FROM
   (SELECT ROW_NUMBER() Over(ORDER BY(SELECT 1)) AS RowNum,*
    FROM orders ord) t
 WHERE t.RowNum BETWEEN @StartPage AND @EndPage
+---------------------------------------------------------------
 
 SELECT *
    FROM orders ord
@@ -287,9 +290,22 @@ WITH CTE
 AS
 (
 SELECT        YEAR(DOB) [Year],max(DOB) [DOB]
-                FROM        Student sp
+                FROM   Student sp
                 GROUP BY YEAR(DOB)
 )
 SELECT        * 
 FROM        Student AS S
-join CTE ON        s.DOB =CTE.DOB
+join CTE ON  s.DOB =CTE.DOB
+
+
+select *,MaxOrderDetails.TotalPrice from 
+Orders
+inner join(
+select o1.OrderID,sum((CONVERT(MONEY,o2.UnitPrice)* o2.Quantity)) as TotalPrice from Orders o1 inner join OrderDetails o2 on o1.OrderID=o2.OrderID group by o1.OrderID
+) MaxOrderDetails
+on Orders.OrderID=MaxOrderDetails.OrderID
+
+
+select * from OrderDetails
+
+sp_help OrderDetails
