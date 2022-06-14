@@ -1,0 +1,163 @@
+USE [testdb]
+GO
+/****** Object:  StoredProcedure [dbo].[WS_AddBooking]    Script Date: 15-06-2022 00:55:19 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+
+ALTER procedure [dbo].[WS_AddBooking](
+							 @t_bkno nvarchar(9)=null,
+							 @t_date nvarchar(30)=null,
+							 @t_prbp nvarchar(9)=null,
+							 @t_srep nvarchar(35)=null,
+							 @t_scbp nvarchar(9)=null,
+							 @t_tdlg nvarchar(30)=null,
+							 --@t_amnt numeric(10,4)=null,
+							 @t_advc numeric(19,4)=null,
+							 @t_item nvarchar(47)=null,
+							 @t_qoor numeric(19,4)=null,
+							 @t_pric numeric(19,4)=null,
+							 @t_oamt numeric(19,4)=null,
+						     @t_qtno nvarchar(47)=null,
+							 @t_pono_code numeric(4)= null,
+							 @t_flag nvarchar(5)=null,
+							 @new_identity nvarchar(10) = null output,
+							 @totalamt numeric(19,4) = 0 output,
+							 @message nvarchar(100) = null output
+)
+as
+begin
+        declare @t_pono numeric(10);
+		declare @t_ffno nvarchar(3);
+		declare @new_t_date datetime;
+		declare @new_t_tdlg datetime;
+		declare @t_amnt numeric(19,4)=0;
+	    set @new_t_date = convert(datetime, @t_date, 103);
+	    set @new_t_tdlg = convert(datetime, @t_tdlg, 103);
+		declare @new_t_bkno numeric(10);
+
+	if @t_flag = 'I'
+	begin
+		
+		if @t_bkno is null 
+		begin
+
+			set @t_ffno = 'BKN';
+			set @t_bkno =(select t_seri + right('00000000' + convert(nvarchar,t_ffno),6) from swlive.dbo.ttcmcs050100 where t_nrgr = 'QTN' and t_seri =@t_ffno)
+
+			
+			set @t_pono =(select isnull(max(t_pono)+1,1) from swlive.dbo.ttdtst172100 where t_bkno=@t_bkno);
+			insert into swlive..ttdtst171100(t_bkno,t_date,t_prbp,t_srep,t_scbp,t_tdlg,t_amnt,t_advc,t_Refcntd,t_Refcntu) values (@t_bkno,@new_t_date,@t_prbp,@t_srep,@t_scbp,@new_t_tdlg,@t_amnt,@t_advc,0,0)
+	          set @new_t_bkno = isnull((select count(t_bkno) from swlive..ttdtst171100 where t_bkno = @t_bkno),0)
+			if(@new_t_bkno > 0)
+			begin
+				insert into swlive..ttdtst172100 (t_bkno,t_pono,t_item,t_qoor,t_pric,t_oamt,t_qtno,t_Refcntd,t_Refcntu) values(@t_bkno,@t_pono,@t_item,@t_qoor,@t_pric,@t_oamt,@t_qtno,0,0)
+			end
+			
+			if @@ROWCOUNT> 0
+			
+			update swlive.dbo.ttcmcs050100 set t_ffno = t_ffno +1 where t_nrgr = 'QTN' and t_seri = 'BKN'
+			set @t_amnt =(select isnull(sum(t_oamt),0) from swlive.dbo.ttdtst172100 where t_bkno=@t_bkno);
+			update swlive.dbo.ttdtst171100 set t_amnt = @t_amnt where  t_bkno=@t_bkno
+			set @new_identity= @t_bkno;
+			set @message  = 'success';
+			set @totalamt=@t_amnt;
+		end
+		else
+		begin
+			
+			set @t_pono = (select isnull(max(t_pono)+1,1) from swlive..ttdtst172100 where t_bkno=@t_bkno);
+			insert into swlive.dbo.ttdtst172100 values(@t_bkno,@t_pono,@t_item,@t_qoor,@t_pric,@t_oamt,@t_qtno,0,0)
+
+	        set @t_amnt =(select isnull(sum(t_oamt),0) from swlive.dbo.ttdtst172100 where t_bkno=@t_bkno);
+			update swlive.dbo.ttdtst171100 set t_amnt = @t_amnt where t_bkno=@t_bkno
+			if @@ROWCOUNT> 0
+			set @new_identity= @t_bkno;
+			set @message  = 'success';
+			set @totalamt=@t_amnt;
+		end
+	end
+	else
+	begin
+		if @t_flag = 'U' 
+		begin
+			update swlive.dbo.ttdtst171100  set t_date =@new_t_date,t_prbp = @t_prbp,t_srep = @t_srep,t_scbp = @t_scbp,t_tdlg =@new_t_tdlg,t_advc=@t_advc where t_bkno = @t_bkno
+	
+			update swlive.dbo.ttdtst172100 set t_item = @t_item,t_qoor =@t_qoor,t_pric = @t_pric,t_oamt = @t_oamt,
+			t_qtno = @t_qtno where t_bkno=@t_bkno and t_pono = @t_pono_code
+
+			set @t_amnt =(select isnull(sum(t_oamt),0) from swlive.dbo.ttdtst172100 where t_bkno=@t_bkno);
+			update swlive.dbo.ttdtst171100 set t_amnt = @t_amnt where t_bkno=@t_bkno
+			if @@ROWCOUNT> 0
+			set @new_identity= @t_bkno;
+			set @message  = 'success';
+			set @totalamt=@t_amnt;
+		end
+		else
+		begin
+			if @t_flag = 'D'
+			begin
+				delete from swlive.dbo.ttdtst172100 where t_bkno=@t_bkno and t_pono = @t_pono_code
+				set @t_amnt =(select isnull(sum(t_oamt),0) from swlive.dbo.ttdtst172100 where t_bkno=@t_bkno);
+				update swlive.dbo.ttdtst171100 set t_amnt = @t_amnt where t_bkno=@t_bkno
+				if @@ROWCOUNT> 0
+				set @new_identity= @t_bkno;
+				set @message  = 'success';
+				set @totalamt=@t_amnt;
+			end
+		end
+	end
+
+	if @t_flag = 'UH'
+		begin
+		
+		   update swlive.dbo.ttdtst171100  set t_date =@new_t_date,t_prbp = @t_prbp,t_srep = @t_srep,t_scbp = @t_scbp,t_tdlg =@new_t_tdlg,t_advc=@t_advc where t_bkno = @t_bkno
+	        set @t_amnt =(select isnull(sum(t_oamt),0) from swlive.dbo.ttdtst172100 where t_bkno=@t_bkno);
+			update swlive.dbo.ttdtst171100 set t_amnt = @t_amnt where  t_bkno=@t_bkno
+			
+			if @@ROWCOUNT> 0
+			set @new_identity= @t_bkno;
+			set @message  = 'success';
+			set @totalamt=@t_amnt;
+		end
+	
+
+	if @t_flag = 'S'
+			begin
+				--select t1.t_bkno,t1.t_pono,t1.t_item,t1.t_qoor,t1.t_pric,t1.t_oamt,t1.t_qtno,t2.t_dsca as t_itemdsca from swlive.dbo.ttdtst172100 as t1 INNER JOIN swlive..ttdtst105100 as t2 on ltrim(rtrim(t1.t_item))=ltrim(rtrim(t2.t_item)) where (t_bkno=@t_bkno or @t_bkno is null) 
+					select t1.t_bkno,t1.t_pono,t1.t_item,t1.t_qoor,t1.t_pric,t1.t_oamt,t1.t_qtno,t2.t_dsca as t_itemdsca,
+					case when t3.t_worn is not null then 'Logged' else 'Booked' end as BookStatus
+					from swlive.dbo.ttdtst172100 as t1 
+					INNER JOIN swlive..ttdtst105100 as t2 on ltrim(rtrim(t1.t_item))=ltrim(rtrim(t2.t_item))
+					left outer join swlive..ttdtst152100 as t3 on ltrim(rtrim(t3.t_item)) =ltrim(rtrim(t1.t_item)) and trim(rtrim(t3.t_bkno))=ltrim(rtrim(t1.t_bkno)) where (t1.t_bkno=@t_bkno or @t_bkno is null) 
+
+				set @new_identity= @t_bkno;
+				set @message  = 'success';
+				set @totalamt=@t_amnt;
+			end
+	if @t_flag = 'R'
+			begin
+				select t1.t_bkno,t1.t_pono,t1.t_item,t1.t_qoor,t1.t_pric,t1.t_oamt,t1.t_qtno,t2.t_dsca as t_itemdsca from swlive.dbo.ttdtst172100 as t1 INNER JOIN swlive..ttdtst105100 as t2 on ltrim(rtrim(t1.t_item))=ltrim(rtrim(t2.t_item)) where (t_bkno=@t_bkno and t_pono=@t_pono_code) 
+			
+				
+				set @new_identity= @t_bkno;
+				set @message  = 'success';
+				set @totalamt=@t_amnt;
+			end
+    if @t_flag = 'H'
+			   begin
+				--select '<a href="AddBooking.aspx?t_bkno='+t_bkno+'"><i class="far fa-plus-square"></i></a>' as t_link,t_bkno,FORMAT(t_date,'dd-MM-yyyy') as 't_date',t_prbp,t_srep,t_scbp,FORMAT(t_tdlg,'dd-MM-yyyy') as 't_tdlg',t_amnt,t_advc from swlive.dbo.ttdtst171100 where (t_bkno=@t_bkno) or (t_prbp=@t_prbp) 
+
+				select '<a href="AddBooking.aspx?t_bkno='+t1.t_bkno+'"><i class="far fa-plus-square"></i></a>' as t_link,t1.t_bkno,FORMAT(t1.t_date,'dd-MM-yyyy') as 't_date',t1.t_prbp,t1.t_srep,t1.t_scbp,t2.t_desc as scbpdesc,FORMAT(t1.t_tdlg,'dd-MM-yyyy') as 't_tdlg',t1.t_amnt,t1.t_advc from swlive.dbo.ttdtst171100 as t1 left join swlive.dbo.ttdtst100100 as t2 ON t1.t_scbp=t2.t_bpid
+				   where (t1.t_bkno=@t_bkno) or (t1.t_prbp=@t_prbp) 
+				set @new_identity= @t_bkno;
+				set @message  = 'success';
+				set @totalamt=@t_amnt;
+				end
+				--ttccom100100
+				--select * from swlive.dbo.ttdtst100100
+end
+
+
+
