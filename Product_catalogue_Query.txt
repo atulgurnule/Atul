@@ -1,0 +1,215 @@
+USE [testdb]
+GO
+/****** Object:  StoredProcedure [dbo].[SWProduct_Catalogue_Master]    Script Date: 17-06-2022 00:05:42 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+
+ALTER procedure [dbo].[SWProduct_Catalogue_Master]    
+(  
+   @Action nvarchar(10),
+   @t_item nvarchar (94)=NULL,    
+   @t_desc nvarchar (300)=NULL,
+   @t_catg nvarchar (20)=NULL,
+   @t_ptyp nvarchar (20)=NULL,
+   @t_shpc nvarchar (20)=NULL,
+   @t_actv int=NULL,
+   @t_colr nvarchar (50)=NULL,
+   @t_prof nvarchar (50)=NULL,
+   @t_livp int=NULL,
+   @t_tren int=NULL,
+   @t_imag nvarchar (600)=NULL,
+   @t_path nvarchar (600)=NULL,
+   @ERROR nvarchar(100) OUT,
+   @message nvarchar(200)= NULL OUTPUT
+  )    
+AS 
+ 
+BEGIN   
+
+ declare @t_itemExist bit;
+ declare @t_catgExist bit;
+ declare  @t_ptypExist bit;
+ declare  @t_shpcExist bit;
+ set @message='';
+
+SET NOCOUNT ON;
+     
+	
+	--SELECT
+     IF @Action = 'SELECT'
+      BEGIN
+            --select t_item,t_desc,t_catg,t_ptyp,t_shpc,t_actv from swlive..ttdswc500100
+			 select T1.t_item,T1.t_desc,T2.t_catg,T2.t_desc as catgdesc,T3.t_ptyp,T3.t_desc as ptypdesc,T4.t_shpc,T4.t_desc as shpcdesc,t_actv,T1.t_colr,T1.t_prof,T1.t_imag,T1.t_path,T1.t_livp,T1.t_tren 
+			 from swlive..ttdswc500100 AS T1
+			 INNER JOIN swlive..ttdswc501100 AS T2 on T1.t_catg=T2.t_catg
+			 LEFT JOIN swlive..ttdswc502100 AS T3 on T1.t_ptyp=T3.t_ptyp
+			 LEFT JOIN swlive..ttdswc504100 AS T4 on T1.t_shpc=T4.t_shpc
+			SET @ERROR = 'SUCCESS'
+      END
+
+	 IF @Action = 'SELECTID'
+      BEGIN
+            --select t_item,t_desc,t_catg,t_ptyp,t_shpc,t_actv from swlive..ttdswc500100 
+			 select T1.t_item,T1.t_desc,T2.t_catg,T2.t_desc as catgdesc,T3.t_ptyp,T3.t_desc as ptypdesc,T4.t_shpc,T4.t_desc as shpcdesc,t_actv,T1.t_colr,T1.t_prof,T1.t_imag,T1.t_path,T1.t_livp,T1.t_tren 
+			 from swlive..ttdswc500100 AS T1
+			 INNER JOIN swlive..ttdswc501100 AS T2 on T1.t_catg=T2.t_catg
+			 INNER JOIN swlive..ttdswc502100 AS T3 on T1.t_ptyp=T3.t_ptyp
+			 LEFT JOIN swlive..ttdswc504100 AS T4 on T1.t_shpc=T4.t_shpc
+			 WHERE t_item =@t_item	
+			 SET @ERROR = 'SUCCESS'
+      END
+
+	  IF @Action = 'SELECTPRODSHAPE'
+			  BEGIN
+	 
+					 select T1.t_shpc,T1.t_desc,T1.t_ptyp from swlive..ttdswc504100 AS T1
+					--select T1.t_shpc,T1.t_desc,T1.t_ptyp,T2.t_desc as t_proddesc from swlive..ttdswc504100 AS T1 INNER JOIN swlive..ttdswc502100 AS T2 ON T1.t_ptyp=T2.t_ptyp
+					SET @ERROR = 'SUCCESS'
+			  END
+
+	   IF @Action = 'SELECTFINISH'
+			  BEGIN
+	 
+					 select T1.t_fnsh,T1.t_desc from swlive..ttdswc503100 AS T1
+					 SET @ERROR = 'SUCCESS'
+			  END
+
+	  --INSERT
+	
+		IF @Action = 'INSERT'
+	
+
+	  set @t_itemExist = (case when (select count(t_item) from swlive..ttdswc500100 where t_item = ltrim(rtrim(@t_item))) = 0 then  CAST('true' as bit) else  CAST('false' as bit) end);
+
+	  set @t_catgExist = (case when (select count(t_catg) from swlive..ttdswc501100 where t_catg = ltrim(rtrim(@t_catg))) = 0 then  CAST('false' as bit) else  CAST('true' as bit) end);
+      
+	  --set @t_ptypExist = (case when (select count(t_ptyp) from swlive..ttdswc502100 where t_ptyp = ltrim(rtrim(@t_ptyp))) = 0  then  CAST('false' as bit) else  CAST('true' as bit) end);
+
+	   IF ltrim(rtrim(@t_shpc))=''
+	   BEGIN
+		SET @t_shpcExist=1;
+	
+	  END
+	  ELSE
+	  BEGIN
+       set @t_shpcExist = (case when (select count(t_shpc) from swlive..ttdswc504100 where t_shpc = ltrim(rtrim(@t_shpc))) = 0 then CAST('false' as bit) else  CAST('true' as bit) end);
+	 END
+
+	   if @t_itemExist = 0 
+       begin
+			
+             set @message='Item already exist!!!';
+             set @message = @message + '<br>';
+			 set @ERROR = 'FAIL'; 
+			
+       end
+
+	   if @t_catgExist = 0 
+       begin
+			
+             set @message='Invalid Product category!!!';
+             set @message = @message + '<br>';
+			 set @ERROR = 'FAIL'; 
+			
+       end
+
+		--   if @t_ptypExist =  0 
+		--   begin
+		--         set @message = @message + 'Invalid product type!!!';
+		--         set @message = @message + '<br>';
+				 --SET @ERROR = 'FAIL' 
+             
+		--   end
+
+       if @t_shpcExist  =  0
+       begin
+             set @message = @message  + 'Invalid Shape Code!!!';
+             set @message = @message + '<br>';
+             SET @ERROR = 'FAIL'; 
+       end
+
+	--IF(@t_itemExist=1 AND @t_catgExist= 1 AND  @t_ptypExist = 1 AND @t_shpcExist=1)
+	IF(@t_itemExist=1 AND @t_catgExist= 1 AND @t_shpcExist=1)
+
+	BEGIN 
+
+	Insert into swlive..ttdswc500100(t_item,t_desc,t_catg,t_ptyp,t_shpc,t_actv,t_colr,t_prof,t_imag,t_path,t_livp,t_tren,t_Refcntd,t_Refcntu) 
+	values(@t_item,@t_desc,@t_catg,@t_ptyp,@t_shpc,@t_actv,@t_colr,@t_prof,@t_imag,@t_path,@t_livp,@t_tren,0,0)     
+	SET @ERROR = 'SUCCESS' 
+	SET @message = 'SUCCESS' 
+	END
+	
+
+	---UPDATE
+
+    IF @Action = 'UPDATE'
+	 --set @t_itemExist = (case when (select count(t_item) from swlive..ttdswc500100 where t_item = ltrim(rtrim(@t_item))) = 0 then  CAST('true' as bit) else  CAST('false' as bit) end);
+
+	  set @t_catgExist = (case when (select count(t_catg) from swlive..ttdswc501100 where t_catg = ltrim(rtrim(@t_catg))) = 0 then  CAST('false' as bit) else  CAST('true' as bit) end);
+      
+	  --set @t_ptypExist = (case when (select count(t_ptyp) from swlive..ttdswc502100 where t_ptyp = ltrim(rtrim(@t_ptyp))) = 0  then  CAST('false' as bit) else  CAST('true' as bit) end);
+
+	  IF ltrim(rtrim(@t_shpc))=''
+	  BEGIN
+		SET @t_shpcExist=1;
+	
+	  END
+	  ELSE
+	  BEGIN
+       set @t_shpcExist = (case when (select count(t_shpc) from swlive..ttdswc504100 where t_shpc = ltrim(rtrim(@t_shpc))) = 0 then  CAST('false' as bit) else  CAST('true' as bit) end);
+	  END
+	  
+	  
+	  if @t_itemExist = 0 
+       begin
+			
+             set @message='Item already exist!!!';
+             set @message = @message + '<br>';
+			 set @ERROR = 'FAIL'; 
+			
+       end
+
+	   if @t_catgExist = 0 
+       begin
+			
+             set @message='Invalid Product category!!!';
+             set @message = @message + '<br>';
+			 set @ERROR = 'FAIL'; 
+			
+       end
+
+    --   if @t_ptypExist =  0 
+    --   begin
+    --         set @message = @message + 'Invalid product type!!!';
+    --         set @message = @message + '<br>';
+			 --SET @ERROR = 'FAIL' 
+             
+    --   end
+
+       if @t_shpcExist  =  0
+       begin
+             set @message = @message  + 'Invalid Shape Code!!!';
+             set @message = @message + '<br>';
+             SET @ERROR = 'FAIL'; 
+       end
+
+	--IF(@t_catgExist= 1 AND  @t_ptypExist = 1 AND @t_shpcExist=1)
+	  IF(@t_catgExist= 1 AND @t_shpcExist=1)
+
+		BEGIN
+				UPDATE swlive..ttdswc500100 SET t_item = @t_item, t_desc = @t_desc,t_catg=@t_catg,t_ptyp=@t_ptyp,t_shpc=@t_shpc,t_actv=@t_actv,t_colr=@t_colr,t_prof=@t_prof,t_imag=@t_imag,t_path=@t_path,t_livp=@t_livp,t_tren=@t_tren WHERE t_item = @t_item
+				SET @ERROR = 'SUCCESS' 
+				SET @message = 'SUCCESS' 
+		END
+ 
+      --DELETE
+    IF @Action = 'DELETE'
+      BEGIN
+            DELETE FROM swlive..ttdswc500100
+            WHERE t_item = @t_item
+			SET @ERROR = @t_item + 'SUCCESS'
+      END
+
+END
