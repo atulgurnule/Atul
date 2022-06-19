@@ -1,3 +1,176 @@
 This is demo for new file upload.
 
 this is test change.
+
+IF @Action = 'INSERT'
+		    BEGIN
+				IF EXISTS(SELECT * FROM swlive..ttcswc209100 WHERE t_mobl = @t_mobl) --  To Check mobile is exits or not
+  				BEGIN 
+				     --select 'Mobile no. is already Exist' as message
+					 SET @ERROR = 'This mobile no is already exist'; 
+				END
+				ELSE
+				BEGIN
+						set @t_emno = (select (isnull(max(t_emno),2000)+1) from swlive..ttcswc209100)
+						Insert into swlive..ttcswc209100(t_emno,t_nama,t_emai,t_mobl,t_pass,t_Refcntd,t_Refcntu,t_crdt,t_stat) 
+					     values(@t_emno,@t_nama,@t_emai,@t_mobl,@t_pass,0,0,GETDATE(),1)  
+			 
+				       --select  'SUCCESS' as message
+					   SET @ERROR = 'SUCCESS';
+				END
+			END 
+      
+      IF @Action='CHECKTABSTATUS'
+						BEGIN
+						IF NOT EXISTS(SELECT * FROM swlive..ttcswc201100 WHERE t_emno = @t_emno) -- To check employee exist or not
+  						SET @ERROR = 'BASICNOTEXIST'  
+						ELSE
+						IF NOT EXISTS(SELECT * FROM swlive..ttcswc202100 WHERE t_emno = @t_emno) --  To Check FAMILY is exits or not
+  						SET @ERROR = 'FAMILYNOTEXIST'  
+						ELSE
+						IF NOT EXISTS(SELECT * FROM swlive..ttcswc203100 WHERE t_emno = @t_emno) --  To Check EDUCATION is exits or not
+  						SET @ERROR = 'EDUCATIONNOTEXIST'  
+						ELSE
+						--IF NOT EXISTS(SELECT * FROM swlive..ttcswc208100 WHERE t_emno = @t_emno) --  To Check Document is exits or not
+					
+						set @docNotExist=(SELECT count(*) FROM swlive..ttcswc208100 WHERE t_emno = @t_emno and t_dtyp in('PAN Number','Aadhar Number','Address Proof'))
+						if(@docNotExist < 3)
+  						SET @ERROR = 'DOCUMENTNOTEXIST'  
+						ELSE
+						IF NOT EXISTS(SELECT * FROM swlive..ttcswc204100 WHERE t_emno = @t_emno) --  To Check Company is exits or not
+  						SET @ERROR = 'COMPANYNOTEXIST'
+						ELSE
+						IF NOT EXISTS(SELECT * FROM swlive..ttcswc207100 WHERE t_emno = @t_emno) --  To Check Payslip is exits or not
+  						SET @ERROR = 'PAYSLIPNOTEXIST'
+						ELSE
+						IF NOT EXISTS(SELECT * FROM swlive..ttcswc205100 WHERE t_emno = @t_emno) --  To Check Reference is exits or not
+  						SET @ERROR = 'REFERENCENOTEXIST'
+						ELSE
+						IF NOT EXISTS(SELECT * FROM swlive..ttcswc206100 WHERE t_emno = @t_emno) --To Check Certification is exits 
+  						SET @ERROR = 'CERTIFICATIONNOTEXIST'
+						ELSE
+						IF EXISTS(SELECT * FROM swlive..ttcswc200100 WHERE t_emno = @t_emno and t_stat=3) --To Check Certification is exits 
+  						SET @ERROR = 'ALLEXIST'
+						ELSE
+						IF EXISTS(SELECT * FROM swlive..ttcswc200100 WHERE t_emno = @t_emno and t_stat IN (1,2)) --To Check Certification is
+						SET @ERROR = 'NOTSUBMITTED'
+						END
+            
+            ---------------------------------------------------
+            
+            USE [testdb]
+GO
+/****** Object:  StoredProcedure [dbo].[PMS_Dashboard]    Script Date: 19-06-2022 23:55:25 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+
+
+
+ALTER procedure [dbo].[PMS_Dashboard] (
+@t_btno nvarchar(48)=null,
+@t_orno nvarchar(9)=null,
+@t_flag nvarchar(10),
+@message VARCHAR(100) OUT 	
+)
+as 
+begin
+SET NOCOUNT ON;
+            --Batch Wise Count 
+            IF @t_flag = 'B'
+			begin
+					--select p1.t_btno as 'BATCHNo',count(distinct p1.t_orno) as 'Total',count(case when p2.t_prqt>=p2.t_pqty then p2.t_pitm end) as 'CompltedSO',
+					--count(distinct p1.t_orno) - count(case when p2.t_prqt>=p2.t_pqty then p2.t_pitm end) as 'PendingSO',count(distinct p2.t_pitm) as 'TotalParts',
+					--sum(t_comp) as 'CompletedParts',count(distinct p2.t_pitm)-sum(t_comp) as 'Pendingparts'
+					--from swlive.dbo.ttiswc120100 p1 join(
+					--select t_pitm,t_pdno,sum(t_pqty) as t_pqty,sum(t_prqt) as t_prqt,case when sum(t_pqty) <= sum(t_prqt) then 1 else 0  end as t_comp  from swlive.dbo.ttiswc121100
+					--group by t_pitm,t_pdno) p2 on (p2.t_pitm = p1.t_pitm and p2.t_pdno = p1.t_pdno)
+					--where p1.t_btno=@t_btno group by p1.t_btno
+					----,p1.t_orno,p1.t_pdno
+					--SET @message = 'SUCCESS';
+					select z.t_btno as 'BATCHNo',
+					sum(z.comp+z.pend) as 'Total',
+					sum(z.comp) as 'CompltedSO',
+					sum(z.pend) as 'PendingSO',
+					sum(z.p_cmp+z.p_pnd) as 'TotalParts',
+					sum(z.p_cmp) as 'CompletedParts',
+					sum(z.p_pnd) as 'Pendingparts'
+					from (
+					select y.t_btno,y.t_orno, sum(y.t_pqty) as t_pqty,sum(y.t_prqt) as t_prqt ,
+					case when sum(y.t_prqt)>=sum(y.t_pqty) then 1 else 0 end comp,
+					case when sum(y.t_prqt)>=sum(y.t_pqty) then 0 else 1 end pend,
+					sum(y.p_cmp) as p_cmp ,sum(y.p_pnd) as p_pnd
+					from (
+					select p.t_btno,p.t_orno, x.t_pdno,x.t_pitm,x.t_pqty,x.t_prqt,x.p_cmp,x.p_pnd from (
+					select t_pdno,t_pitm,sum(t_pqty) as t_pqty,sum(t_prqt) as t_prqt,
+					case when sum(t_prqt)>=sum(t_pqty) then 1 else 0 end p_cmp,
+					case when sum(t_prqt)>=sum(t_pqty) then 0 else 1 end p_pnd
+					from swlive.dbo.ttiswc121100 group by t_pitm,t_pdno
+					) x inner join swlive.dbo.ttiswc120100 p on p.t_pdno=x.t_pdno and p.t_pitm=x.t_pitm
+					) y group by y.t_btno,y.t_orno
+					) z group by z.t_btno
+					SET @message = 'SUCCESS';
+
+			end
+			--Batch Wise Detail
+			 IF @t_flag = 'BWD'
+			begin
+				select p1.t_btno as 'BATCHNo',p1.t_orno as 'SalesOrder',
+				case when sum(p2.t_prqt)>=sum(p2.t_pqty) then p1.t_orno end as 'CompltedSO',
+				case when count(distinct p1.t_orno) - count(case when p2.t_prqt>=p2.t_pqty then p2.t_pitm end)>0 then p1.t_orno else '' end as 'PendingSO',
+				(select count(distinct t1.t_pitm) from swlive.dbo.ttiswc121100 t1 where t1.t_pdno = p1.t_pdno) tprt ,--total parts
+				count(distinct p2.t_pitm) as 'TotalParts',
+				sum(t_comp) as 'CompletedParts',
+				count(distinct p2.t_pitm)-sum(t_comp) as 'Pendingparts'
+				from swlive.dbo.ttiswc120100 p1 
+				join(
+				select t_pitm,t_pdno,
+				sum(t_pqty) as t_pqty,
+				sum(t_prqt) as t_prqt,
+				case when sum(t_pqty) <= sum(t_prqt) then 1 else 0  end as t_comp  
+				from swlive.dbo.ttiswc121100
+				group by t_pitm,t_pdno ) p2 
+				on (p2.t_pitm = p1.t_pitm and p2.t_pdno = p1.t_pdno) where p1.t_btno=@t_btno 
+				group by p1.t_btno,p1.t_orno,p1.t_pdno
+				SET @message = 'SUCCESS';
+			end
+			-- Batchwise and Sales Order wise Report
+			If @t_flag='BSWR'
+				begin
+				--select p1.t_orno as 'SalesOrder',p1.t_btno as 'BATCHNo',opr.t_pitm,p1.t_opro,routing.t_dsca from swlive.dbo.ttiswc120100 p1 
+				--left join swlive..ttiswc121100 opr on (opr.t_pdno = p1.t_pdno and opr.t_pitm = p1.t_pitm)
+				--left join swlive..ttiswc110100 routing on (routing.t_opro=p1.t_opro)
+				--where p1.t_btno=@t_btno and p1.t_orno=@t_orno 
+				--group by p1.t_btno,p1.t_orno,p1.t_pdno,opr.t_pitm,p1.t_opro,t_dsca
+					select x.t_orno,x.t_btno,x.t_pitm,x.dsca as routingdsca,(x.pqty-x.prqt) as pend_proc,x.opno,x.t_pdno
+					,(select max(pr.t_dsca) from swlive.dbo.ttiswc121100 pl
+					left outer join swlive.dbo.ttiswc110100 rt  on (rt.t_opro=pl.t_opro)
+					left outer join swlive.dbo.ttiswc111100 os  on (os.t_opro = rt.t_opro )
+					left outer join swlive.dbo.ttiswc100100 pr on (pr.t_tano = os.t_tano)
+					where  pl.t_pdno=x.t_pdno and pl.t_pitm=x.t_pitm and os.t_opno=x.opno) as nxt_proc_name
+					from (
+					select p1.t_orno,p1.t_btno,p1.t_pitm,p1.t_pdno,
+					routing.t_dsca as dsca,
+					max(p2.t_pqty) pqty,
+					max(p2.t_prqt) prqt,
+					case when max(p2.t_pqty)>max(p2.t_prqt) then (max(p2.t_prqt)+1)*10 else max(p2.t_pqty) end as opno
+					from swlive.dbo.ttiswc120100 p1 
+					join(select t_pitm,t_pdno,sum(t_pqty) as t_pqty,sum(t_prqt) as t_prqt,case when sum(t_pqty) <= sum(t_prqt) then 1 else 0  end as t_comp from swlive.dbo.ttiswc121100
+					group by t_pitm,t_pdno) p2 on (p2.t_pitm = p1.t_pitm and p2.t_pdno = p1.t_pdno)
+					join swlive.dbo.ttiswc121100 opr on (opr.t_pdno = p1.t_pdno and opr.t_pitm = p1.t_pitm)
+					left outer join swlive.dbo.ttiswc110100 routing on (routing.t_opro=p1.t_opro)
+					where p1.t_btno=@t_btno and p1.t_orno=@t_orno 
+					--where p1.t_btno='ML ENT B00063' and p1.t_orno='REG237114' 
+					group by p1.t_pdno,p1.t_orno ,p1.t_btno,p1.t_pitm,routing.t_dsca) x  
+					SET @message = 'SUCCESS';
+				end
+end	
+
+
+
+
+
+
+
+
