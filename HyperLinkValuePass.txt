@@ -1,0 +1,25 @@
+ <li class="nav-item">
+                                <a href="#" class="nav-link info_link" data-value="1">
+                                    <i class="nav-icon fas fa-file"></i>
+                                    <p>Get Anchor value1</p>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="#" class="nav-link info_link" data-value="2">
+                                    <i class="nav-icon fas fa-file"></i>
+                                    <p>Get Anchor value2</p>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="#" class="nav-link info_link" data-value="3">
+                                    <i class="nav-icon fas fa-file"></i>
+                                    <p>Get Anchor value3</p>
+                                </a>
+                            </li>
+
+ $(document).ready(function () {
+        $('.info_link').click(function () {
+            alert($(this).attr('data-value'));
+            // or alert($(this).hash();
+        });
+    });
