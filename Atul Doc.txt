@@ -1,6 +1,19 @@
 This is demo for new file upload.
 
 this is test change.
+DECLARE @SDate DATE = '2022-01-01',
+            @EDate DATE = '2022-10-31';
+    
+    SELECT  TOP (DATEDIFF(DAY, @SDate, @EDate) + 1)
+            ResultDate = DATEADD(DAY, ROW_NUMBER() OVER(ORDER BY a.object_id) - 1, '2022-01-01')
+    FROM    sys.all_objects a
+            CROSS JOIN sys.all_objects b;
+https://dba.stackexchange.com/questions/240059/is-it-possible-to-write-a-select-statement-to-obtain-all-dates-between-2-date-co
+https://stackoverflow.com/questions/23290454/get-all-dates-between-two-dates-in-sql-server
+https://blog.sqlauthority.com/2014/12/09/sql-server-list-the-name-of-the-months-between-date-ranges/
+https://blog.sqlauthority.com/2021/01/13/sql-server-list-all-dates-between-start-and-end-date/
+http://www.dbrnd.com/2015/08/list-all-dates-between-two-dates-in-sql-server/
+https://syntaxfix.com/question/9335/get-all-dates-between-two-dates-in-sql-server
 
 IF @Action = 'INSERT'
 		    BEGIN
