@@ -14,6 +14,37 @@ https://blog.sqlauthority.com/2014/12/09/sql-server-list-the-name-of-the-months-
 https://blog.sqlauthority.com/2021/01/13/sql-server-list-all-dates-between-start-and-end-date/
 http://www.dbrnd.com/2015/08/list-all-dates-between-two-dates-in-sql-server/
 https://syntaxfix.com/question/9335/get-all-dates-between-two-dates-in-sql-server
+--------------------------------------------------------------------
+tat Calculatioon Logic
+select t_bpid,t_stdt,
+dateadd(second,-60*120,cast(t_stdt as datetime)) as MinusMinute,
+
+ convert(nvarchar(max),DATEDIFF(second, dateadd(second,-60*120,cast(t_stdt as datetime)),
+ getdate())) AS DateTimeDifference,
+            replace(str(CAST(convert(nvarchar(max),DATEDIFF(second, dateadd(second,-60*120,cast(t_stdt as datetime)),getdate())) AS BIGINT)/3600,
+              len(ltrim(CAST(convert(nvarchar(max),DATEDIFF(second, dateadd(second,-60*120,cast(t_stdt as datetime)),getdate())) AS BIGINT)/3600))+
+			   abs(sign(CAST(convert(nvarchar(max),DATEDIFF(second, dateadd(second,-60*120,cast(t_stdt as datetime)), getdate())) AS BIGINT)/359999)-1)) + ':' + 
+	               str((CAST(convert(nvarchar(max),DATEDIFF(second, dateadd(second,-60*120,cast(t_stdt as datetime)), getdate())) AS BIGINT)/60)%60,2) + ':' + 
+	                str(CAST(convert(nvarchar(max),DATEDIFF(second, dateadd(second,-60*120,cast(t_stdt as datetime)),getdate())) AS BIGINT)%60,2),' ','0') RemainingTime
+
+					from [dbo].[ttccom100100]
+---------------------------------------------------------------------
+select t_bpid,t_stdt,
+dateadd(second,-60*120,cast(t_stdt as datetime)) as MinusMinute,
+
+ convert(nvarchar(max),DATEDIFF(second, dateadd(second,-60*120,cast(t_stdt as datetime)),
+ getdate())) AS DateTimeDifference,
+            replace(str(CAST(107163851 AS BIGINT)/3600,
+              len(ltrim(CAST(107163851 AS BIGINT)/3600))+
+			   abs(sign(CAST(107163851 AS BIGINT)/359999)-1)) + ':' + 
+	               str((CAST(107163851 AS BIGINT)/60)%60,2) + ':' + 
+	                str(CAST(107163851 AS BIGINT)%60,2),' ','0') RemainingTime
+
+					from [dbo].[ttccom100100]
+					
+					
+
+--------------------------------------------------------------------
 
 IF @Action = 'INSERT'
 		    BEGIN
