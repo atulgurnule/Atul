@@ -14,6 +14,8 @@ https://blog.sqlauthority.com/2014/12/09/sql-server-list-the-name-of-the-months-
 https://blog.sqlauthority.com/2021/01/13/sql-server-list-all-dates-between-start-and-end-date/
 http://www.dbrnd.com/2015/08/list-all-dates-between-two-dates-in-sql-server/
 https://syntaxfix.com/question/9335/get-all-dates-between-two-dates-in-sql-server
+
+https://sqlserverguides.com/stored-procedure-in-sql-server-for-insert/
 --------------------------------------------------------------------
 tat Calculatioon Logic
 select t_bpid,t_stdt,
