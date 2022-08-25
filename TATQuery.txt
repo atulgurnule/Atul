@@ -1,0 +1,15 @@
+select t_bpid,t_stdt,
+dateadd(second,-60*120,cast(t_stdt as datetime)) as MinusMinute,
+convert(nvarchar(max),DATEDIFF(second, dateadd(second,-60*120,cast(t_stdt as datetime)),
+ getdate())) AS DateTimeDifference,
+            replace(str(CAST(convert(nvarchar(max),ABS(DATEDIFF(second, dateadd(second,-60*120,cast(t_stdt as datetime)), getdate()) - (1400*60))) AS BIGINT)/3600,
+              len(ltrim(CAST(convert(nvarchar(max),ABS(DATEDIFF(second, dateadd(second,-60*120,cast(t_stdt as datetime)), getdate()) - (1400*60))) AS BIGINT)/3600))+
+			   abs(sign(CAST(convert(nvarchar(max),ABS(DATEDIFF(second, dateadd(second,-60*120,cast(t_stdt as datetime)), getdate()) - (1400*60))) AS BIGINT)/359999)-1)) + ':' + 
+	               str((CAST(convert(nvarchar(max),ABS(DATEDIFF(second, dateadd(second,-60*120,cast(t_stdt as datetime)), getdate()) - (1400*60))) AS BIGINT)/60)%60,2) + ':' + 
+	                str(CAST(convert(nvarchar(max),ABS(DATEDIFF(second, dateadd(second,-60*120,cast(t_stdt as datetime)), getdate()) - (1400*60))) AS BIGINT)%60,2),' ','') RemainingTime
+                   from [dbo].[ttccom100100] where t_bpid='BN0000001'
+
+				   SELECT CONVERT(varchar, (DATEADD(SECOND, -900 , 0)), 114)
+
+SELECT ABS(DATEDIFF(second, dateadd(second,-60*120,cast(t_stdt as datetime)),getdate())- (1400*60)) from [dbo].[ttccom100100] where t_bpid='BN0000001' 
+SELECT DATEDIFF(second, dateadd(second,-60*120,cast(t_stdt as datetime)),getdate()) from [dbo].[ttccom100100] where t_bpid='BN0000001' 
