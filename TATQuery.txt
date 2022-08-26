@@ -13,3 +13,26 @@ convert(nvarchar(max),DATEDIFF(second, dateadd(second,-60*120,cast(t_stdt as dat
 
 SELECT ABS(DATEDIFF(second, dateadd(second,-60*120,cast(t_stdt as datetime)),getdate())- (1400*60)) from [dbo].[ttccom100100] where t_bpid='BN0000001' 
 SELECT DATEDIFF(second, dateadd(second,-60*120,cast(t_stdt as datetime)),getdate()) from [dbo].[ttccom100100] where t_bpid='BN0000001' 
+
+Select * Into ##TempTbl  
+    From (
+	  select inflow.inflow_id, 
+			 replace(str(CAST(ABS(inflow.tat * 60) AS BIGINT)/3600,
+              len(ltrim(CAST(ABS(inflow.tat * 60) AS BIGINT)/3600))+
+			   abs(sign(CAST(ABS(inflow.tat * 60) AS BIGINT)/359999)-1)) + ':' + 
+	               str((CAST(ABS(inflow.tat * 60) AS BIGINT)/60)%60,2) + ':' + 
+	                str(CAST(ABS(inflow.tat * 60) AS BIGINT)%60,2),' ','') tatHours,
+			inflow.tat,
+		    replace(str(CAST(ABS(DATEDIFF(second,cast(inflow.doi as datetime),getdate())-(inflow.tat * 60)) AS BIGINT)/3600,
+              len(ltrim(CAST(ABS(DATEDIFF(second,cast(inflow.doi as datetime),getdate())-(inflow.tat * 60)) AS BIGINT)/3600))+
+			   abs(sign(CAST(ABS(DATEDIFF(second,cast(inflow.doi as datetime),getdate())-(inflow.tat * 60)) AS BIGINT)/359999)-1)) + ':' + 
+	               str((CAST(ABS(DATEDIFF(second,cast(inflow.doi as datetime),getdate())-(inflow.tat * 60)) AS BIGINT)/60)%60,2) + ':' + 
+	                str(CAST(ABS(DATEDIFF(second,cast(inflow.doi as datetime),getdate())-(inflow.tat * 60)) AS BIGINT)%60,2),' ','') TATRemaining
+			from inflow inflow    
+		   where inflow.inflow_id=2  )T1  
+  
+    UPDATE A   SET A.TATRequired = RA.TATRemaining From inflow A  
+          INNER JOIN ##TempTbl RA  
+           ON A.inflow_id = RA.inflow_id Where A.inflow_id=@inflow_id  
+  
+     Drop Table ##TempTbl  
