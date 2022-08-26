@@ -1,3 +1,13 @@
+declare @Minutes bigint;
+set @Minutes =90;
+select t_stdt,@Minutes tat,
+(DATEADD(second,(@Minutes*60),cast(t_stdt as datetime))) AddedTime,
+getdate() as CurrentTime,
+--(DATEDIFF(second,cast(t_stdt as datetime),getdate())
+---(30 * 60)) RemainingTimeInSecond,
+case when DATEADD(second,(@Minutes*60),cast(t_stdt as datetime)) > GETDATE() THEN 'IN TAT' ELSE 'OUT TAT' END TATStatus
+from [dbo].[ttccom100100] where t_bpid='BN0000001'
+-----------------------------------------------------------------------------------------------
 select t_bpid,t_stdt,
 dateadd(second,-60*120,cast(t_stdt as datetime)) as MinusMinute,
 convert(nvarchar(max),DATEDIFF(second, dateadd(second,-60*120,cast(t_stdt as datetime)),
@@ -13,7 +23,7 @@ convert(nvarchar(max),DATEDIFF(second, dateadd(second,-60*120,cast(t_stdt as dat
 
 SELECT ABS(DATEDIFF(second, dateadd(second,-60*120,cast(t_stdt as datetime)),getdate())- (1400*60)) from [dbo].[ttccom100100] where t_bpid='BN0000001' 
 SELECT DATEDIFF(second, dateadd(second,-60*120,cast(t_stdt as datetime)),getdate()) from [dbo].[ttccom100100] where t_bpid='BN0000001' 
-
+------------------------------------------------------------------------------------
 Select * Into ##TempTbl  
     From (
 	  select inflow.inflow_id, 
@@ -35,4 +45,5 @@ Select * Into ##TempTbl
           INNER JOIN ##TempTbl RA  
            ON A.inflow_id = RA.inflow_id Where A.inflow_id=@inflow_id  
   
-     Drop Table ##TempTbl  
+     Drop Table ##TempTbl 
+     ---------------------------------------------------------------------------
