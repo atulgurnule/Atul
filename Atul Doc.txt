@@ -17,6 +17,9 @@ https://syntaxfix.com/question/9335/get-all-dates-between-two-dates-in-sql-serve
 
 https://sqlserverguides.com/stored-procedure-in-sql-server-for-insert/
 https://www.sqlshack.com/rollback-sql-rolling-back-transactions-via-the-rollback-sql-query/
+https://www.aspsnippets.com/Articles/Select-Column-values-as-Comma-Separated-Delimited-string-in-SQL-Server-using-COALESCE.aspx#:~:text=In%20order%20to%20fetch%20the,Output%20parameter%20using%20OUTPUT%20keyword.
+https://stackoverflow.com/questions/33016022/invalid-object-name-dbo-splitstring
+
 --------------------------------------------------------------------
 tat Calculatioon Logic
 select t_bpid,t_stdt,
