@@ -1,4 +1,64 @@
 This is demo for new file upload.
+///////////////////////////////////
+
+select l.location_name as site, i.speciality as speciality, i.patient_identifier as Pateint_Id,
+		       i.patient_full_name as patient_full_name,  i.priority as priority,
+          (CAST( CAST((i.tat) AS int) / 60 AS varchar) + ':'  + right('0' + CAST(CAST((i.tat) AS int) % 60 AS varchar(2)),2)) as TAT,
+		  i.work_type as work_type  ,
+          FORMAT(CONVERT(DATETIME,i.appointment_date_time,108),'MM-dd-yyyy HH:mm:ss','en-us') added_on,
+		   cast([dbo].[DaysSubstract](i.appointment_date_time,(i.tat  / 1440)) as datetime) as Expected_Completion_Date,
+
+		  --DATEADD(minute, -i.tat, cast(i.appointment_date_time as datetime)) as Expected_Completion_Date,
+		  ((DATEDIFF(WEEK,cast([dbo].[DaysSubstract](i.appointment_date_time,(i.tat  / 1440)) as datetime), cast(getdate() as datetime)) * 2) + -- get the number of weekend days in between
+                       CASE WHEN DATEPART(WEEKDAY, cast([dbo].[DaysSubstract](i.appointment_date_time,(i.tat  / 1440)) as datetime)) = 1 THEN 1 ELSE 0 END + -- if selection was Sunday, won't add to weekends
+                       CASE WHEN DATEPART(WEEKDAY, cast(getdate() as datetime)) = 6 THEN 1 ELSE 0 END) Weekenddays,  -- if selection was Saturday, won't add to weekends
+          FORMAT(CONVERT(DATETIME,i.appointment_date_time,108),'MM-dd-yyyy HH:mm:ss','en-us') target_date,
+          FORMAT(CONVERT(DATETIME,i.doi,108),'MM-dd-yyyy HH:mm:ss','en-us') AccCreationDate,
+          i.job_status as status,
+          FORMAT(CONVERT(DATETIME,w.evbv_work_date,108),'MM-dd-yyyy HH:mm:ss','en-us') evbv_work_date,
+          FORMAT(CONVERT(DATETIME,w.evbv_follow_up_date,108),'MM-dd-yyyy HH:mm:ss','en-us') followupdate_evbv,
+          evbvf.evbv_final_status,
+          FORMAT(CONVERT(DATETIME,w.pa_work_date,108),'MM-dd-yyyy HH:mm:ss','en-us') pa_work_date,
+          FORMAT(CONVERT(DATETIME,w.pa_follow_up_date,108),'MM-dd-yyyy HH:mm:ss','en-us') followupdate_pa,
+          paf.pa_final_status,
+          FORMAT(CONVERT(DATETIME,w.ref_work_date,108),'MM-dd-yyyy HH:mm:ss','en-us') ref_work_date,
+          FORMAT(CONVERT(DATETIME,w.ref_follow_up_date,108),'MM-dd-yyyy HH:mm:ss','en-us') followupdate_ref,
+          referralf.referral_final_status as ref_final_status,
+          FORMAT(CONVERT(DATETIME,i.job_final_completion_date,108),'MM-dd-yyyy HH:mm:ss','en-us') CompletionDate,
+          evbv.name as evbvName,  pa.name as paName,  ref.name as refName,  i.job_final_completion_date,  i.tat as tat1,
+		  i.pa_required,i.referral_required,i.job_status_evbv,i.assigned_to_evbv,i.assigned_to_pa,i.assigned_to_ref,
+		  --i.TATRequired,
+		  concat(substring(i.tatrequired, 1, CHARINDEX(':',i.tatrequired)-1),':',
+            substring(substring(i.tatrequired, CHARINDEX(':',i.tatrequired)+1,
+			LEN(i.tatrequired)), 1, CHARINDEX(':',substring(i.tatrequired,
+            CHARINDEX(':',i.tatrequired)+1, LEN(i.tatrequired)))-1)) as tatrequired,
+		  i.TATStatus,i.Appt_Booked_Date,i.FilePath as FilePath
+		  
+          --into #temp1
+             from inflow i 
+             inner join location_master l on i.location_id=l.location_id 
+             left join work_action_remarks w on i.inflow_id= w.inflow_id
+             left join  evbv_final_status_master evbvf on w.evbv_final_status_id=evbvf.evbv_sub_status_id
+             left join  pa_final_status_master paf on w.pa_final_status_id=paf.pa_final_status_id
+             left join  referral_final_status_master referralf on w.ref_final_status_id=referralf.referral_final_status_id
+             left join employee_info evbv on evbv.emp_id=i.assigned_to_evbv 
+             left join employee_info pa on pa.emp_id=i.assigned_to_pa
+             left join employee_info ref on ref.emp_id=i.assigned_to_ref
+			 where i.inflow_id=2
+			 
+select  inflow_id  ,
+  FORMAT(CONVERT(DATETIME,Expected_Completion_Date,108),'MM-dd-yyyy HH:mm:ss','en-us') Expected_Completion_Date,
+  getdate() currentdate,
+  DATEDIFF(second,cast(Expected_Completion_Date as datetime),getdate()) TATRemain,
+  replace(str(CAST(ABS(DATEDIFF(second,cast(Expected_Completion_Date as datetime),getdate())) AS BIGINT)/3600,  
+    len(ltrim(CAST(ABS(DATEDIFF(second,cast(Expected_Completion_Date as datetime),getdate())) AS BIGINT)/3600))+  
+     abs(sign(CAST(ABS(DATEDIFF(second,cast(Expected_Completion_Date as datetime),getdate())) AS BIGINT)/359999)-1)) + ':' +   
+         str((CAST(ABS(DATEDIFF(second,cast(Expected_Completion_Date as datetime),getdate())) AS BIGINT)/60)%60,2) + ':' +   
+          str(CAST(ABS(DATEDIFF(second,cast(Expected_Completion_Date as datetime),getdate())) AS BIGINT)%60,2),' ','') TATRemaining,
+		  TATStatus
+		  
+			    from #temp1 
+/////////////////////////////////
 
 this is test change.
 DECLARE @SDate DATE = '2022-01-01',
