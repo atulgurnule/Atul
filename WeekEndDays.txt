@@ -1,0 +1,26 @@
+--declare @startDate datetime='2022-08-27 23:08:50.120';
+--declare @endDate datetime='2022-09-21 23:08:50.120';
+declare @startDate datetime=DATEADD(minute, -20160, cast('2022-08-27 23:08:50.120' as datetime));
+declare @endDate datetime= cast('2022-08-27 23:08:50.120' as datetime);
+print @startDate
+print @endDate
+
+DECLARE @weekenddays INT;
+SET @weekenddays = ABS((DATEDIFF(WEEK, @startDate, @endDate) * 2) + -- get the number of weekend days in between
+                       CASE WHEN DATEPART(WEEKDAY, @startDate) = 1 THEN 1 ELSE 0 END + -- if selection was Sunday, won't add to weekends
+                       CASE WHEN DATEPART(WEEKDAY, @endDate) = 6 THEN 1 ELSE 0 END)  -- if selection was Saturday, won't add to weekends
+					   
+select @weekenddays
+
+select (DATEADD(minute, -20160, cast('2022-08-27 23:08:50.120' as datetime)) -abs(@weekenddays)) Expected_Completion_Date
+
+ select 
+ ABS((DATEDIFF(WEEK, cast('2022-08-09' as date), cast('2022-08-21' as date)) * 2) + -- get the number of weekend days in between
+                       CASE WHEN DATEPART(WEEKDAY, cast('2022-08-09' as date)) = 1 THEN 1 ELSE 0 END + -- if selection was Sunday, won't add to weekends
+                       CASE WHEN DATEPART(WEEKDAY, cast('2022-08-21' as date)) = 6 THEN 1 ELSE 0 END) WeekEndDays,
+
+  replace(str(CAST(ABS(DATEDIFF(second,cast('2022-08-09 23:08:50.120' as datetime),getdate()-(AddWeekEndDays))) AS BIGINT)/3600,  
+    len(ltrim(CAST(ABS(DATEDIFF(second,cast('2022-08-09 23:08:50.120' as datetime),getdate()-(AddWeekEndDays))) AS BIGINT)/3600))+  
+     abs(sign(CAST(ABS(DATEDIFF(second,cast('2022-08-09 23:08:50.120' as datetime),getdate()-(AddWeekEndDays))) AS BIGINT)/359999)-1)) + ':' +   
+         str((CAST(ABS(DATEDIFF(second,cast('2022-08-09 23:08:50.120' as datetime),getdate()-(AddWeekEndDays))) AS BIGINT)/60)%60,2) + ':' +   
+          str(CAST(ABS(DATEDIFF(second,cast('2022-08-09 23:08:50.120' as datetime),getdate()-(AddWeekEndDays))) AS BIGINT)%60,2),' ','') TATRemaining
