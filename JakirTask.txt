@@ -1,0 +1,36 @@
+select * from [employee_info]
+select * from [work_action_remarks_1]
+select * from [work_action_remarks_history_1]
+
+select emp.emp_id,count(work.assigned_to_evbv) count_assigned_to_evbv,count(workHis.assigned_to_evbv) count_assigned_to_evbv   from [employee_info] emp
+left join [work_action_remarks_1] work on emp.emp_id=work.assigned_to_evbv
+left join [work_action_remarks_history_1] workHis on emp.emp_id=workHis.assigned_to_evbv
+where emp.emp_id=35
+group by emp.emp_id
+
+
+select assigned_to_evbv,count(assigned_to_evbv) count_assigned_to_evbv
+from [work_action_remarks_1]
+group by assigned_to_evbv
+
+select assigned_to_pa,count(assigned_to_pa) count_assigned_to_pa
+from [work_action_remarks_1]
+group by assigned_to_pa
+
+select 
+assigned_to_ref,count(assigned_to_ref) count_assigned_to_ref
+from [work_action_remarks_1]
+group by assigned_to_ref
+------------------------------------------------------------------------------------
+select assigned_to_evbv assigned_to_evbv_his,count(assigned_to_evbv) count_assigned_to_evbv_his
+from [work_action_remarks_history_1]
+group by assigned_to_evbv
+
+select assigned_to_pa assigned_to_pa_his,count(assigned_to_pa) count_assigned_to_pa_his
+from [work_action_remarks_history_1]
+group by assigned_to_pa
+
+select 
+assigned_to_ref assigned_to_ref_his,count(assigned_to_ref) count_assigned_to_ref_his
+from [work_action_remarks_history_1]
+group by assigned_to_ref
