@@ -1,0 +1,222 @@
+USE [testdb]
+GO
+/****** Object:  StoredProcedure [dbo].[SendBirthdayMail]    Script Date: 23-01-2023 23:40:25 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+
+ALTER PROCEDURE [dbo].[SendBirthdayMail]  
+AS
+BEGIN
+	declare @t_company nvarchar(10), @tmp_company nvarchar(10),@t_payunit nvarchar(10),@t_empno nvarchar(10),@t_empname nvarchar(30),@t_dob nvarchar(10),@t_email nvarchar(30),@t_dept nvarchar(30),@t_desg nvarchar(30),@t_mobile nvarchar(10);
+	declare @mail_body nvarchar(max);declare @gend numeric(1);
+
+	declare @count numeric(2);
+	set @count = 0;
+
+	--set	@year = (select top 1 t_year from swlive..ttfgld005100 where getdate()-1 > t_stdt and t_ptyp=1 and t_prno<=12 order by t_stdt desc)
+	--set	@month = (select top 1 t_prno from swlive..ttfgld005100 where getdate()-1 > t_stdt and t_ptyp=1 and t_prno<=12 order by t_stdt desc)
+	set @mail_body = '<html><head><style>
+        p.center {
+            text-align: center;
+            color: red;
+			font-size:30px;
+			
+        }
+		body 
+		{
+			    font-size: 13.5pt;
+				font-family: "Georgia","serif";
+				color: #1F497D;
+				font-weight: bold;
+		}
+		.para 
+		{
+    		 font-size: 12pt;
+			 color: black;
+			 font-weight: bold;
+		}
+		.line 
+		{
+    		 font-size: 5pt;
+			 color: black;
+			 
+		}
+		</style>
+	</head>';
+	--set @mail_body = @mail_body + '<style>#customers {font-family: "Calibri", Arial, Helvetica, sans-serif;border-collapse: collapse;}';
+	--set @mail_body = @mail_body + '#customers td, #customers th {border: 1px solid #ddd;padding:4px;}'
+	--set @mail_body = @mail_body + '#customers tr:hover {background-color: #ddd;}#customers th {padding-top:4px;padding-bottom:4px;background-color: #f3b730;color: white;}</style>'
+	set @mail_body = @mail_body + '</head><body>';
+	--set @mail_body = @mail_body + '<div><h3>SPACEWOOD FURNISHERS PVT LTD.</h3>'+ '<p>BIRTHDAY REMINDER FOR : ' + convert(nvarchar,getdate(),103)+' </p></div>'
+	--set @mail_body = @mail_body + '<table id=''customers''>';
+	--set @mail_body = @mail_body + '<tr><th align=''left''>Spacewood Unit</th><th align=''left''>Emp No</th><th align=''left''>Emp Name</th><th align=''left''>DOB</th><th align=''left''>Email</th><th align=''left''>Department</th><th align=''left''>Designation</th><th align=''Center''>Mobile No</th></tr>';
+
+	set @mail_body = @mail_body +'<div><p>Good Morning,' + '</p>';
+	set @mail_body = @mail_body + '<p>It’s a special occasion for our Spacewood Family member(s) named below being a ‘Birth Day’ !!</p>';
+	set @mail_body = @mail_body + '<p>It’s a request to all our Seniors & Colleagues to spare some moments out of their busy schedule to convey your wishes and blessings to make this </p>'; 	
+	set @mail_body = @mail_body + '<p>day really Special to them. </p>'; 	
+	--set @mail_body = @mail_body +  '<p class="center large">!! Happy Birthday !!</p><br>';
+
+	set @mail_body = @mail_body + '<p class="center large"><img src="cid:bday3.jpg" border="0" alt=""></p>';
+	
+	set @tmp_company = '';
+	SET NOCOUNT ON;
+	DECLARE cursor_bday CURSOR
+	FOR 
+		select x.company, x.payrol_unit, x.emp_no, x.emp_name, x.dob,x.t_gend, x.email_id, x.dept, x.desg, x.mobile_no
+		from
+		(select 100 company,a.t_puni payrol_unit,b.t_emno emp_no,a.t_nama emp_name,convert(nvarchar,a.t_dobt,103) dob,t_gend,
+				a.t_emai email_id,b.t_dept dept_code,d.t_dnam dept,c.t_desg desg_code,e.t_dnam desg,a.t_phon mobile_no
+		from swlive..ttcswc001100 a
+		join swlive..ttcswc004100 b on (b.t_emno = a.t_emno)
+		join swlive..ttcswc005100 c on (c.t_emno = a.t_emno)
+		join swlive..ttcswc002100 d on (d.t_dept = b.t_dept)
+		join swlive..ttcswc003100 e on (e.t_desg = c.t_desg)
+		where a.t_empt = 2  and  c.t_grad in ( 'O001','O002','O003','O004','O005','M001','M002','M003','M004','M005','M006','M007','M008','M009')
+		and day(a.t_dobt) = day(getdate())  and  month(a.t_dobt) = month(getdate())
+		and c.t_fdat = (select max(k.t_fdat) from swlive..ttcswc005100 k where k.t_emno = c.t_emno) 
+		union all
+		select 200 company,f.t_puni payrol_unit,g.t_emno emp_no,f.t_nama emp_name,convert(nvarchar,f.t_dobt,103) dob,t_gend,
+			   f.t_emai email_id,g.t_dept dept_code,i.t_dnam dept_name,h.t_desg desg_code,j.t_dnam desg_name,f.t_phon mobile_no
+		from swlive..ttcswc001200 f
+		join swlive..ttcswc004200 g on (g.t_emno = f.t_emno)
+		join swlive..ttcswc005200 h on (h.t_emno = f.t_emno)
+		join swlive..ttcswc002200 i on (i.t_dept = g.t_dept)
+		join swlive..ttcswc003200 j on (j.t_desg = h.t_desg)
+		where f.t_empt = 2  and  h.t_grad in ( 'O001','O002','O003','O004','O005','M001','M002','M003','M004','M005','M006','M007','M008','M009')
+		and day(f.t_dobt) = day(getdate()) and  month(f.t_dobt) = month(getdate())
+		and h.t_fdat = (select max(l.t_fdat) from swlive..ttcswc005200 l where l.t_emno = h.t_emno)) x
+		order by  x.payrol_unit, x.emp_name
+	open cursor_bday;
+	FETCH NEXT FROM cursor_bday into @t_company,@t_payunit,@t_empno,@t_empname,@t_dob,@gend,@t_email,@t_dept,@t_desg,@t_mobile
+	WHILE @@FETCH_STATUS = 0
+    BEGIN
+		if @tmp_company <> @t_company 
+		begin
+			set @tmp_company = @t_company 
+			--set @mail_body = @mail_body + '<tr><td colspan = 8><b> Company : ' + @t_company + '</b></td></tr>';
+		end
+		set @count = @count + 1;
+		
+		set @mail_body = @mail_body + '<p>'+ @t_empname+' ('+@t_dept+',Email. '+  @t_email + case when @t_mobile<>'' then ', Mobile ' + @t_mobile else '' end + ')<br>';
+		FETCH NEXT FROM cursor_bday into @t_company,@t_payunit,@t_empno,@t_empname,@t_dob,@gend,@t_email,@t_dept,@t_desg,@t_mobile
+	END
+	CLOSE cursor_bday;
+
+	DEALLOCATE cursor_bday;
+	--set @mail_body = @mail_body + ' as its '+case when @count = 1 and @gend = 1 then 'his' else case when @count = 1 and @gend = 2 then 'Her' else 'their' end end  +' birthday today.</p>' 
+	
+	--set @mail_body = @mail_body + '<p>I request all my Seniors & colleagues to spare some moments out of your busy schedule, and do wish them on this occasion to make the day really special for them.</div></p>';
+	
+	
+	set @mail_body = @mail_body +  '<br><p class="para">With Regards<br>'
+	set @mail_body = @mail_body +  'P&A Dept.</p>'
+	set @mail_body  =@mail_body + '<p class="line"><small>This email was sent from a notification-only address that cannot accept incoming email. Please do not reply to this message.</small></p>' 
+	set @mail_body = @mail_body + '</body></html>';
+	declare @sub nvarchar(100);
+	set @sub = concat('Birthday wishes to Spacewood Family members Born today : ',convert(nvarchar,getdate(),103))
+	if @count>0
+	begin
+	EXEC msdb.dbo.sp_send_dbmail  
+		@profile_name = 'SpacewoodMailProfile', 
+		@recipients = 'pers@spacewood.in; pmb@spacewood.in; viplavi.v@spacewood.in;hgp@spacewood.in',
+		@copy_recipients = 'makarand@spacewood.in',  
+		@blind_copy_recipients = 'sameer.k@spacewood.in',  
+		@body = @mail_body,
+		@body_format = 'HTML',
+		@file_attachments = 'E:\Image\bday3.jpg',
+		@subject =  @sub;  
+	   --print @mail_body;
+	end
+END
+
+
+--exec SendBirthdayMail
+
+USE [testdb]
+GO
+/****** Object:  StoredProcedure [dbo].[PPLC_SendEmail]    Script Date: 23-01-2023 23:39:09 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+
+
+ALTER PROCEDURE [dbo].[PPLC_SendEmail] (@empcode nvarchar(15),@mbody nvarchar(200)= null,@otp nvarchar(10)=null,@usermail nvarchar(50) = null OUTPUT)
+AS
+BEGIN
+	declare @email_add nvarchar(50);
+
+
+	set @email_add = (select t_emai from swlive..ttcswc001100 where t_emno = @empcode)
+	if ltrim(rtrim(@email_add)) <> '' 
+	begin
+		update swlive..ttcswc034100 set t_pass = @otp,t_exdt = getdate() + 0.5  where t_emid = @empcode
+		declare @mail_body nvarchar(max);
+		SET NOCOUNT ON;	
+		set @mail_body = @mbody;
+		set  @email_add = @email_add +';'
+		declare @sub nvarchar(100);
+		set @sub = 'Password Reset Request'
+		EXEC msdb.dbo.sp_send_dbmail  
+			@profile_name = 'SpacewoodMailProfile',  
+			@recipients = @email_add,
+			@blind_copy_recipients = 'hgp@spacewood.in',  
+			@body = @mail_body,
+			@body_format = 'HTML',
+			@subject =  @sub;  
+		
+	end
+	set @usermail = @email_add;
+end
+
+USE [testdb]
+GO
+/****** Object:  StoredProcedure [dbo].[sp_SendAttachment_200]    Script Date: 23-01-2023 23:37:13 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+ALTER procedure [dbo].[sp_SendAttachment_200] as
+	begin
+	declare @tab char(1) = CHAR(9)
+    declare @sqlQuery nvarchar(max);
+	declare @mail_body varchar(max);
+	set @sqlQuery = 'select * from testdb.dbo.tf_Unallocated_Documents_200 order by [Business Partner Code]';
+    
+	set @mail_body ='<html><head>'
+	set @mail_body = @mail_body + '<style>#customers {font-family: "Calibri", Arial, Helvetica, sans-serif;border-collapse: collapse;}';
+	set @mail_body = @mail_body + '#customers td, #customers th {border: 1px solid #ddd;padding:4px;}'
+	set @mail_body = @mail_body + '#customers tr:hover {background-color: #ddd;}#customers th {padding-top:4px;padding-bottom:4px;background-color: #f3b730;color: white;}</style>'
+	set @mail_body = @mail_body + '<div><h3>MODERN LEAVING SOLUTIONS PVT LTD.</h3>'+ '<p><h4>Unassigned Invoices & Receipts</h4></p></div>'
+	set @mail_body = @mail_body + '<br>'
+	set @mail_body = @mail_body + '<br>'
+
+	set @mail_body = @mail_body + '<div><p>Team,' + '</p>';
+	set @mail_body = @mail_body + '<p>Please find attached herewith list of Unasigned Invoices & Receipts for your reference.</p>';
+	set @mail_body = @mail_body + '<br>'
+	set @mail_body = @mail_body + '<br>'
+
+
+	
+	set @mail_body  =@mail_body + '<p class="line"><small>Note : This email was sent from a notification-only address that cannot accept incoming email.</small></p>' 
+	set @mail_body = @mail_body + '</body></html>';
+	execute as login = 'sa'
+	exec  msdb.dbo.sp_send_dbmail 
+	@profile_name = 'SpacewoodMailProfile', 
+	@recipients='anant.s@spacewood.in', 
+	--@recipients='mayurkolte@spacewood.in;swbangacc@spacewood.in;sabyasachi@spacewood.in;mlmumacc@spacewood.in;acc1@spacewood.co.in;acc2@spacewood.co.in;accounts6@spacewood.co.in', 
+	--@copy_recipients = 'makarand@spacewood.in',
+	--@blind_copy_recipients = 'sameer.k@spacewood.in;anant.s@spacewood.in;hgp@spacewood.in',
+	@subject='Unassigned Invoices & Receipts',
+	@body =@mail_body,
+	@body_format = 'HTML',
+	@execute_query_database = 'testdb',
+	@attach_query_result_as_file=1,
+    @query = @sqlQuery, 
+	@query_attachment_filename='Unassigned_Doc2.csv',
+	@query_result_separator=@tab,
+	@query_result_no_padding=1
+	end
