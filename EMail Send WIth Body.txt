@@ -1,0 +1,173 @@
+using System;
+using System.Collections.Generic;
+using System.Configuration;
+using System.Data;
+using System.Data.SqlClient;
+using System.Linq;
+using System.Web;
+using System.Web.Security;
+using HumanResourceManagement.Models;
+using System.Net.Mail;
+using System.Net;
+using System.IO;
+using System.Web.UI;
+using System.Text;
+using context = System.Web.HttpContext;
+
+using iTextSharp.text;
+using iTextSharp.text.pdf;
+using iTextSharp.text.html.simpleparser;
+
+using System.Collections;
+using System.Globalization; 
+
+ public string AddCertificationInsertConfirm(Certification certification, UserRegistration userRegistration, Employee employee)
+        {
+            int i;
+            string response = string.Empty;
+            try
+            {
+                //Update status in company
+
+                //Update status in Certification
+                using (SqlConnection con = new SqlConnection(cs))
+                {
+                    //DateTime TodayDate = Convert.ToDateTime(family.t_dobt);
+                    //string dateofbirth = TodayDate.ToString("yyyy-MM-dd");
+                    con.Open();
+                    SqlCommand comm = new SqlCommand("testdb..[SWEmpCertificationDetails]", con);
+
+                    comm.CommandType = CommandType.StoredProcedure;
+                    comm.Parameters.AddWithValue("@t_emno", certification.t_emno);
+                    comm.Parameters.AddWithValue("@Action", "INSERTCONFIRM");
+                    comm.Parameters.Add("@ERROR", SqlDbType.VarChar, 500);
+
+                    comm.Parameters["@ERROR"].Direction = ParameterDirection.Output;
+                    i = comm.ExecuteNonQuery();
+                    con.Close();
+                    message = (string)comm.Parameters["@ERROR"].Value.ToString();
+                    response = message;
+                    //return response;
+                }
+                //Update status in Registration form
+                using (SqlConnection con = new SqlConnection(cs))
+                {
+                    //DateTime TodayDate = Convert.ToDateTime(family.t_dobt);
+                    //string dateofbirth = TodayDate.ToString("yyyy-MM-dd");
+                    con.Open();
+                    SqlCommand comm = new SqlCommand("testdb..[SWUserRegistration]", con);
+
+                    comm.CommandType = CommandType.StoredProcedure;
+                    comm.Parameters.AddWithValue("@t_emno", userRegistration.t_emno);
+                    comm.Parameters.AddWithValue("@Action", "INSERTCONFIRM");
+                    comm.Parameters.Add("@ERROR", SqlDbType.VarChar, 500);
+
+                    comm.Parameters["@ERROR"].Direction = ParameterDirection.Output;
+                    i = comm.ExecuteNonQuery();
+                    con.Close();
+                    message = (string)comm.Parameters["@ERROR"].Value.ToString();
+                    response = message;
+                    //return response;
+                }
+                //Send Submitted confirm mail
+                string Feedback;
+                //string EmailMode = "Admin";
+                //string AdminMail1 = "atul.gurnule7@gmail.com";
+                //const string SERVER = "relay-hosting.secureserver.net";
+                using (SqlConnection con = new SqlConnection(cs))
+                {
+                    if (employee.t_emai != "")
+                    {
+                        /////////////////////////
+                        using (StringWriter sw = new StringWriter())
+                        {
+                            using (HtmlTextWriter hw = new HtmlTextWriter(sw))
+                            {
+                                //////////////////////////////
+                                string FullName = string.Join(" ", employee.t_firn, employee.t_midn, employee.t_lasn);
+                                StringBuilder sb = new StringBuilder();
+                                sb.Append("<html><body>");
+                                //sb.Append("<img src='~/HumanResourceManagement/HumanResourceManagement/dist/img/loginlogo.png' alt='Smiley face'  width='35%' height='15%'/>");
+                                sb.Append("<h2>SPACEWOOD FURNISHERS PVT LTD.</h2>");
+                                sb.Append("<hr size='15' style='background-color:#72AFD1'>");
+                                sb.Append("<h4>Hi, " + FullName + "</h4>");
+                                sb.Append("<h2>Thank You For Contacting Us</h2>");
+                                sb.Append("<p>You have submitted application successfully in spacewood.</p>");
+
+                                sb.Append("</br>");
+                                sb.Append("<hr>");
+                                sb.Append("<table>");
+                                sb.Append("<tr>");
+                                sb.Append("<h5>Please note your registered application number for all further communication with Spacewood.</h5>");
+                                sb.Append("</tr>");
+                                sb.Append("<tr>");
+                                sb.Append("<td>Registration No.: <b>" + certification.t_emno + "</b></td>");
+                                sb.Append("</tr>");
+                                //sb.Append("<tr>");
+                                //sb.Append("<td>Password: <b>" + user.t_pass + "</b></td>");
+                                //sb.Append("</tr>");
+                                sb.Append("</br>");
+                                sb.Append("</table>");
+
+                                sb.Append("<hr>");
+                                sb.Append("<p>You can contact us at hr@spacewood.in for queries regarding anything about the service.</p>");
+                                sb.Append("</hr>");
+                                sb.Append("<p><b>Regards,</b></p>");
+                                sb.Append("<p><b>Team Spacewood</b></p>");
+                                sb.Append("</body></html>");
+
+                                //StringReader sr = new StringReader(sb.ToString());
+                                Feedback = sb.ToString();
+
+
+                                //MailMessage oMail = new MailMessage();
+
+                                //oMail.From = new MailAddress(AdminMail1);
+                                //oMail.To.Add(employee.t_emai);
+
+                                //oMail.Subject = "Spacewood | Application Details";
+                                //oMail.IsBodyHtml = true; // enumeration
+                                //oMail.Priority = MailPriority.High; // enumeration
+                                //oMail.Body = Feedback;
+                                //SmtpClient smtp = new SmtpClient();
+                                ////smtp.Host = "email-smtp.us-east-1.amazonaws.com";smtp.gmail.com
+                                //smtp.Host = "smtp.gmail.com";
+                                //smtp.EnableSsl = true;
+                                //NetworkCredential NetworkCred = new NetworkCredential("atul.gurnule7@gmail.com", "atul$1987");
+                                ////smtp.UseDefaulCredentials = true;
+                                //smtp.Credentials = NetworkCred;
+                                //smtp.Port = 587;
+                                ////vbnguwwiuntyorlm
+                                //smtp.Send(oMail);
+
+                                con.Open();
+                                SqlCommand comm = new SqlCommand("testdb..[SWSendEmailUserRegistratioComplete]", con);
+
+                                comm.CommandType = CommandType.StoredProcedure;
+                                comm.Parameters.AddWithValue("@subject", "Spacewood | Application Details");
+                                //cmd.Parameters.AddWithValue("@profile", "SpacewoodMail");
+                                comm.Parameters.AddWithValue("@profile", "SpacewoodHRMailProfile"); 
+                                //comm.Parameters.AddWithValue("@profile", "scp_mail");
+                                comm.Parameters.AddWithValue("@to", employee.t_emai);
+                                comm.Parameters.AddWithValue("@cc", "pers@spacewood.in");
+                                comm.Parameters.AddWithValue("@bcc", "");
+                                comm.Parameters.AddWithValue("@mbody", Feedback);
+                                i = comm.ExecuteNonQuery();
+                                con.Close();
+
+                            }
+
+                        }
+                    }
+                }
+
+                return response;
+            }
+            catch (Exception ex)
+            {
+                ex.ToString();
+                response = ex.ToString();
+                return response;
+            }
+            //return i;
+        }
