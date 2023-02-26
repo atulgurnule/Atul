@@ -1,0 +1,136 @@
+ <div class="card-body table-responsive p-0">
+                        <table id="tblbookingdetails" class="table table-bordered table-striped ">
+                            <tfoot align="right">
+                                <tr>
+                                    <th></th>
+                                    <th></th>
+                                    <th></th>
+                                    <th></th>
+                                    <th></th>
+                                    <th></th>
+                                    <th></th>
+                                    <th></th>
+                                    <th></th>
+                                    <th></th>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+
+ function Bind_BookingDetails(t_bkno) {
+            userid = '<%= Session["t_usid"] %>';
+
+            if (t_bkno != '') {
+                $.ajax({
+
+                    type: "POST",
+                    url: "AddBooking.aspx/BindBookingDetails",
+                    data: '{t_bkno:"' + t_bkno + '"}',
+                    contentType: "application/json; charset=utf-8",
+                    dataType: "json",
+                    processData: false,
+                    success: function (data) {
+
+
+                        var datatableVariable = $('#tblbookingdetails').DataTable({
+
+                            "footerCallback": function (row, data, start, end, display) {
+                                var api = this.api(), data;
+                                // converting to interger to find total
+                                var intVal = function (i) {
+                                    return typeof i === 'string' ?
+                                        i.replace(/[\$,]/g, '') * 1 :
+                                        typeof i === 'number' ?
+                                            i : 0;
+                                };
+                                var CollTotal = api
+                                    .column(5)
+                                    .data()
+                                    .reduce(function (a, b) {
+                                        return intVal(a) + intVal(b);
+                                    }, 0);
+
+                                // Update footer by showing the total with the reference of the column index 
+                                $(api.column(0).footer()).html('Total');
+                                $(api.column(1).footer()).html('');
+                                $(api.column(2).footer()).html('');
+                                $(api.column(3).footer()).html('');
+                                $(api.column(4).footer()).html('');
+                                $(api.column(5).footer()).html((CollTotal).toFixed(2));
+                                $(api.column(6).footer()).html('');
+                                $(api.column(7).footer()).html('');
+                                $(api.column(8).footer()).html('');
+                            },
+
+                            "responsive": true, "lengthChange": false, "autoWidth": true,
+                            "buttons": ["excel", "pdf", "print"],
+                            "bDestroy": true,
+                            data: data.d,
+                            columns: [
+                                { "data": "t_pono", "title": "Sr No." },
+                                { "data": "t_item", "title": "Item" },
+                                { "data": "t_itemdsca", "title": "Item Description" },
+                                { "data": "t_qoor", "title": "Quantity" },
+                                { "data": "t_pric", "title": "Price" },
+                                { "data": "t_oamt", "title": "Amount", className: "text-right" },
+                                { "data": "t_qtno", "title": "Qtn Number" },
+                                //{ "data": "BookStatus", "title": "Booking Status" },
+                                {
+                                    data: null, "title": "Booking Status", render: function (data, type, row, meta) {
+                                        var bookingStatus = "";
+
+                                        if (row.BookStatus == 'Logged') {
+
+                                            bookingStatus = "Logged";
+                                            return '<div' + bookingStatus + '" class="badge bg-warning">' + bookingStatus + '</div>';
+                                        }
+                                        else if (row.BookStatus == 'Booked') {
+                                            bookingStatus = "Booked";
+                                            return '<div' + bookingStatus + '" class="badge bg-success">' + bookingStatus + '</div>';
+                                        }
+                                    }
+                                },
+
+                                {
+                                    'data': null, title: 'Edit', wrap: true, "render": function (item) {
+                                        if (userid == 'ADMIN') {
+                                            return '<div class="btn-group"><button type="button" data-toggle="modal" data-target="#exampleModal" onclick="Bind_Booking_Lines(' + "'" + item.t_bkno + "'" + ',' + item.t_pono + ')" value="0" class="btn btn-success btn-sm" disabled> <i class="nav-icon fas fa-edit"></i></button></div>'
+                                        }
+                                        else {
+                                            return '<div class="btn-group"><button type="button" data-toggle="modal" data-target="#exampleModal" onclick="Bind_Booking_Lines(' + "'" + item.t_bkno + "'" + ',' + item.t_pono + ')" value="0" class="btn btn-success btn-sm"> <i class="nav-icon fas fa-edit"></i></button></div>'
+                                        }
+                                    }
+                                },
+                                {
+                                    'data': null, title: 'Delete', wrap: true, "render": function (item) {
+
+                                        if (item.BookStatus == 'Logged') {
+
+                                            return '<div class="btn-group"><button type="button" value="0" class="btn btn-default btn-sm" id="btndel1" disabled> <i class="far fa-trash-alt"></i></button></div>'
+                                        }
+                                        else if (item.BookStatus == 'Booked') {
+
+                                            if (userid == 'ADMIN') {
+
+                                                return '<div class="btn-group"><button type="button" value="0" class="btn btn-default btn-sm" id="btndel1" disabled> <i class="far fa-trash-alt"></i></button></div>'
+                                            }
+                                            else {
+
+                                                return '<div class="btn-group"><button type="button" onclick="delete_row(' + "'" + item.t_bkno + "'" + ',' + item.t_pono + ')" value="0" class="btn btn-danger btn-sm" id="btndel1"> <i class="far fa-trash-alt"></i></button></div>'
+
+                                            }
+                                        }
+
+
+
+                                    }
+                                }
+
+                            ]
+
+                        }).buttons().container().appendTo('#tblbookingdetails_wrapper .col-md-6:eq(0)');
+                    }
+                });
+            }
+
+        }
