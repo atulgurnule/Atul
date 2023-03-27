@@ -223,3 +223,25 @@ namespace CheckBox_DropDownList_MVC.Controllers
         }
     }
 }
+
+CREATE TABLE [dbo].[Fruits](
+	[FruitId] [int] NOT NULL,
+	[FruitName] [varchar](30) NOT NULL,
+ CONSTRAINT [PK_Fruits_1] PRIMARY KEY CLUSTERED 
+(
+	[FruitId] ASC
+)WITH (PAD_INDEX  = OFF, STATISTICS_NORECOMPUTE  = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS  = ON, ALLOW_PAGE_LOCKS  = ON) ON [PRIMARY]
+) ON [PRIMARY]
+
+GO
+
+INSERT INTO Fruits
+SELECT 1,'Mango'
+UNION ALL
+SELECT 2,'Orange'
+UNION ALL
+SELECT 3,'Banana'
+UNION ALL
+SELECT 4,'Apple'
+UNION ALL
+SELECT 5,'Papaya'
