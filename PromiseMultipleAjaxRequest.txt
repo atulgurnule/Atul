@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+   <meta charset="UTF-8">
+   <meta http-equiv="X-UA-Compatible" content="IE=edge">
+   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+   <title>Document</title>
+</head>
+<body>
+
+<p>After clicking to make the fetch requests, the result will be printed to the DOM below.</p>
+<button onclick="makeRequests()">Make requests</button>
+<div id="output"></div>
+<script>
+async function makeRequests() {
+const output = document.getElementById('output');
+const array = [
+fetch('https://jsonplaceholder.typicode.com/posts'),
+fetch('https://jsonplaceholder.typicode.com/comments'),
+fetch('https://jsonplaceholder.typicode.com/photos')
+];
+try {
+const responses = await Promise.all(array);
+const data = await Promise.all(responses.map(response => response.json()))
+output.textContent = JSON.stringify(data);
+} catch {
+output.textContent = "Multiple fetch failed";
+}
+}
+</script>
+  
+</body>
+</html>
+
+https://openjavascript.info/code-lives/index.html
+https://openjavascript.info/2023/01/12/wait-for-multiple-fetch-requests-to-finish/
