@@ -1,3 +1,9 @@
+//////////////////For Role Set///////////////////////////////
+https://www.c-sharpcorner.com/article/role-based-menus-in-asp-net-mvc/
+https://www.mediafire.com/file/4a1z136attnebaf/AuthenticationDemo.zip/file
+https://www.dotnetcurry.com/aspnet-mvc/1102/aspnet-mvc-role-based-security
+https://blog.codehunger.in/role-based-authentication-in-asp-net-mvc/
+///////////////////////////////////////////////////////////////
 This is demo for new file upload.
 ///////////////////////////////////
 
