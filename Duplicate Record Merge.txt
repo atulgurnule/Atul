@@ -1,0 +1,68 @@
+Multiple rows to one comma-separated value in Sql Server
+ 
+0
+votes
+To return data as comma separated values, I want to develop a table valued function in SQL Server.
+
+For example table: tbl
+
+ID | Value
+---+-------
+ 1 | 100
+ 1 | 200
+ 1 | 300     
+ 1 | 400 
+Now when I execute the query using the function Func1(value)
+
+SELECT Func1(Value) 
+FROM tbl 
+WHERE ID = 1
+Output that I want is: 100,200,300,400
+
+Can someone please help me with this?
+
+sql-serversql-server-group-concat
+ Sep 16, 2022 in Database by Kithuzzz • 38,010 points • 19,309 views
+ 
+1 answer to this question.
+ 
+0
+votes
+Test Data
+
+DECLARE @Table1 TABLE(ID INT, Value INT)
+INSERT INTO @Table1 VALUES (1,100),(1,200),(1,300),(1,400)
+Query
+
+SELECT  ID
+       ,STUFF((SELECT ', ' + CAST(Value AS VARCHAR(10)) [text()]
+         FROM @Table1 
+         WHERE ID = t.ID
+         FOR XML PATH(''), TYPE)
+        .value('.','NVARCHAR(MAX)'),1,2,' ') List_Output
+FROM @Table1 t
+GROUP BY ID
+Result Set
+
+╔════╦═════════════════════╗
+║ ID ║     List_Output     ║
+╠════╬═════════════════════╣
+║  1 ║  100, 200, 300, 400 ║
+╚════╩═════════════════════╝
+QL Server 2017 and Later Versions
+
+If you are working on SQL Server 2017 or later versions, you can use built-in SQL Server Function STRING_AGG to create the comma delimited list:
+
+DECLARE @Table1 TABLE(ID INT, Value INT);
+INSERT INTO @Table1 VALUES (1,100),(1,200),(1,300),(1,400);
+
+
+SELECT ID , STRING_AGG([Value], ', ') AS List_Output
+FROM @Table1
+GROUP BY ID;
+Result Set
+
+╔════╦═════════════════════╗
+║ ID ║     List_Output     ║
+╠════╬═════════════════════╣
+║  1 ║  100, 200, 300, 400 ║
