@@ -66,3 +66,5 @@ Result Set
 ║ ID ║     List_Output     ║
 ╠════╬═════════════════════╣
 ║  1 ║  100, 200, 300, 400 ║
+
+https://www.sqlshack.com/string_agg-function-in-sql/
