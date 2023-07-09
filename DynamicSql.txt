@@ -1,0 +1,85 @@
+https://dbfiddle.uk/eIdknGaH
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+-- exec GetBucketwiseRawData '2019-04-05','2022-04-26','0-30'
+Alter PROCEDURE GetBucketwiseRawData
+	(
+	@FromDate date=null,
+	@ToDate date=null,
+	@bucket nvarchar(50),
+	@t_sndr
+
+	)
+AS
+BEGIN
+
+	SET NOCOUNT ON;
+	declare @BucketRange1 nvarchar(max);
+	declare @BucketRange2 nvarchar(max);
+	declare @filter nvarchar(max);
+	declare @sql nvarchar(max);
+	 if(@bucket='0-30')
+	 begin 
+	 set @filter= 'where DATEDIFF(DAY,a.t_endt,a.t_stdt) BETWEEN ''0'' and ''30'''
+	 end 
+	 else if(@bucket='31-60')
+	 begin 
+	  set @filter= 'where DATEDIFF(DAY,a.t_endt,a.t_stdt) BETWEEN ''31'' and ''60'''
+	 end 
+	 else if(@bucket='61-90')
+	 begin 
+	  set @filter= 'where DATEDIFF(DAY,a.t_endt,a.t_stdt) BETWEEN ''61'' and ''90'''
+	 end 
+	 else if(@bucket='91-120')
+	 begin 
+	 set @filter= 'where DATEDIFF(DAY,a.t_endt,a.t_stdt) BETWEEN ''91'' and ''120'''
+	 end 
+	 else if(@bucket='121-180')
+	 begin 
+	  set @filter= 'where DATEDIFF(DAY,a.t_endt,a.t_stdt) BETWEEN ''121'' and ''180'''
+	 end 
+	  else if(@bucket='181-240')
+	 begin 
+	  set @filter= 'where DATEDIFF(DAY,a.t_endt,a.t_stdt) BETWEEN ''181'' and ''240'''
+	 end 
+	 else if(@bucket='241-365')
+	 begin 
+	 set @filter= 'where DATEDIFF(DAY,a.t_endt,a.t_stdt) BETWEEN ''241'' and ''365'''
+	 end 
+	 else if(@bucket='365+')
+	 begin 
+	  set @filter= 'where DATEDIFF(DAY,a.t_endt,a.t_stdt) > ''365'''
+	 end 
+	
+
+	set @sql= 'Select  a.t_bpid,t_nama,t_ctit,
+               t_nama,
+               t_seak,
+               t_prbp,
+               t_prst,
+               t_stdt,
+               t_endt,
+               t_ccur,
+               t_sndr,
+               t_edyn,
+               t_fovn,
+               t_lvdt,
+               t_inrl,
+               sum(t_smt4) sumt_smt4
+               From ttccom100100 a 
+
+				'+@filter+' and
+cast(t_crdt as date) >= '''+CONVERT(VARCHAR(10),@FromDate, 101) +''' and cast(t_crdt as date) <= '''+CONVERT(VARCHAR(10),@ToDate, 101) +'''
+and  CHARINDEX('','' + t_sndr + '','', '',''+''' + @t_sndr + '''+'','') > 0
+group by a.t_bpid,t_nama,t_ctit,t_nama,t_seak,t_prbp,t_prst,t_stdt,t_endt,t_ccur,t_sndr,t_edyn,t_fovn,t_lvdt,t_inrl
+order by a.t_bpid
+'
+print @sql
+exec (@sql)
+	
+	END
+GO
+
+
