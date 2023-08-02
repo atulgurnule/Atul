@@ -1,0 +1,52 @@
+CREATE TABLE [dbo].[OrderMaster](
+[OrderId] [int] IDENTITY(1,1) NOT NULL,
+[OrderDate] [date] NULL,
+[OrderAmount] [money] NULL,
+CONSTRAINT [PK_OrderMaster] PRIMARY KEY CLUSTERED
+(
+[OrderId] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF,
+ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+) ON [PRIMARY]
+
+INSERT INTO OrderMaster VALUES('2014-05-01',3500),
+('2014-05-02',3000),
+('2014-05-03',2800),
+('2014-05-04',4500),
+('2014-05-05',350)
+
+
+select * from OrderMaster
+
+
+------------------------------
+
+DECLARE @sql AS NVARCHAR(MAX),
+@PivotColumnNames AS NVARCHAR(MAX),
+@PivotSelectColumnNames AS NVARCHAR(MAX)
+
+--Get distinct values of the PIVOT Column
+SELECT @PivotColumnNames= ISNULL(@PivotColumnNames + ',','')
++ QUOTENAME(Process)
+FROM (SELECT DISTINCT Process FROM OrderMaster) AS cat
+
+--Get distinct values of the PIVOT Column with isnull
+SELECT @PivotSelectColumnNames 
+= ISNULL(@PivotSelectColumnNames + ',','')
++ 'ISNULL(' + QUOTENAME(Process) + ', 0) AS '
++ QUOTENAME(Process)
+FROM (SELECT DISTINCT Process FROM OrderMaster) AS cat
+
+print @PivotColumnNames
+print @PivotSelectColumnNames
+------------------------------------
+
+
+
+SET @sql = 'SELECT  Format(OrderDate,''MM-yyyy'') as OrderDate, ' + @PivotSelectColumnNames + ' FROM OrderMaster ' +
+   ' PIVOT ' +
+   ' ( ' +
+   ' sum(OrderAmount)' +
+   ' FOR Process IN (' + @PivotColumnNames + ') )  AS PivotTable'
+
+EXEC (@sql)
