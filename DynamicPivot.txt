@@ -40,7 +40,20 @@ FROM (SELECT DISTINCT Process FROM OrderMaster) AS cat
 print @PivotColumnNames
 print @PivotSelectColumnNames
 ------------------------------------
+DECLARE @cols NVARCHAR (MAX)
 
+--SELECT @cols = COALESCE (@cols + ',[' + CONVERT(NVARCHAR, [OrderDate], 106) + ']', 
+--               '[' + CONVERT(NVARCHAR, [OrderDate], 106) + ']')
+--               FROM    (SELECT DISTINCT [OrderDate] FROM OrderMaster) PV  
+--               ORDER BY [OrderDate]
+--SELECT @cols = COALESCE (@cols + ',[' + CONVERT(NVARCHAR, FORMAT([OrderDate],'MMMM-yyyy'), 106) + ']', 
+--               '[' + CONVERT(NVARCHAR, FORMAT([OrderDate],'MMMM-yyyy'), 106) + ']')
+--               FROM    (SELECT DISTINCT CONVERT(NVARCHAR, FORMAT([OrderDate],'MMMM-yyyy'), 106) FROM OrderMaster) PV  
+--               ORDER BY [OrderDate]
+
+SELECT @cols = STUFF((SELECT ',' + QUOTENAME(LEFT(DATENAME(MONTH,OrderDate),3) + '-' + CAST(YEAR(OrderDate) AS CHAR(4)))
+               FROM (SELECT DISTINCT OrderDate FROM OrderMaster) x ORDER BY OrderDate FOR XML PATH(''), TYPE).value('.', 'NVARCHAR(MAX)') ,1,1,'')
+print @cols
 
 
 SET @sql = 'SELECT  Format(OrderDate,''MM-yyyy'') as OrderDate, ' + @PivotSelectColumnNames + ' FROM OrderMaster ' +
