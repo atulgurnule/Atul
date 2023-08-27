@@ -1,0 +1,63 @@
+ public ActionResult Index()
+        {
+            string ipAddress = Request.ServerVariables["HTTP_X_FORWARDED_FOR"];
+            if (string.IsNullOrEmpty(ipAddress))
+            {
+                ipAddress = Request.ServerVariables["REMOTE_ADDR"];
+            }
+            ViewBag.IPAddress = ipAddress;
+
+            return View();
+        }
+
+public ActionResult InsertData()
+{
+    string ipAddress = Request.UserHostAddress; // Get client IP address
+    
+    // Code to insert the IP address into the SQL Server database
+    
+    return View();
+}
+//////////////////////////////////////////////////////////////////////////////
+
+public ActionResult GetClientIP()
+{
+    string ipAddress = GetClientIPAddress();
+    ViewBag.ClientIP = ipAddress;
+    
+    return View();
+}
+
+private string GetClientIPAddress()
+{
+    string ipAddress = string.Empty;
+
+    // Attempt to get IP address from server variables
+    if (System.Web.HttpContext.Current != null)
+    {
+        ipAddress = System.Web.HttpContext.Current.Request.ServerVariables["HTTP_X_FORWARDED_FOR"];
+
+        if (string.IsNullOrEmpty(ipAddress))
+        {
+            ipAddress = System.Web.HttpContext.Current.Request.ServerVariables["REMOTE_ADDR"];
+        }
+        else
+        {
+            // The HTTP_X_FORWARDED_FOR header can contain a comma-separated list of IPs.
+            // The client's IP will be the first entry in this list.
+            ipAddress = ipAddress.Split(',')[0];
+        }
+    }
+
+    return ipAddress;
+}
+
+Here's a breakdown of the code:
+
+In your MVC controller action, you call the GetClientIPAddress method to retrieve the client's IP address.
+The GetClientIPAddress method first attempts to get the IP address from the HTTP_X_FORWARDED_FOR server variable. This variable can contain a comma-separated list of IPs when there are proxy servers involved.
+If HTTP_X_FORWARDED_FOR is empty, it falls back to using the REMOTE_ADDR server variable, which contains the client's direct IP address.
+The HTTP_X_FORWARDED_FOR header can contain multiple IP addresses separated by commas. We split the header value and take the first IP in the list, which should be the client's IP.
+Please note that this method might not work correctly in all scenarios due to variations in proxy configurations, client setups, and network setups. The client's IP address might be masked or modified in certain cases. Also, be aware of privacy concerns when storing or processing user IP addresses. Always ensure you are following applicable privacy laws and best practices when handling user data.
+
+
