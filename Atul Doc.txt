@@ -1,3 +1,45 @@
+Get value from datatable while select checkbox checked
+
+https://www.aspsnippets.com/questions/821533/Get-rows-Id-for-Checked-CheckBoxes-in-jQuery-DataTable-in-ASPNet-MVC/
+https://datatables.net/extensions/select/examples/initialisation/checkbox.html
+
+$(function () {
+$(document).on("click", "#btnAddtoMailing", function () {
+debugger;
+var getselectedvalues = $('#dataTable input:checked').parents("tr")
+var row = $('#dataTable input:checked').closest('tr').data();
+
+alert(row);
+
+//var count = $('#dataTable').DataTable().rows('.selected').count();
+
+//var checked_rows = $('#dataTable').DataTable().rows('.selected').data();
+//alert(count);
+//console.log(row);
+
+$.ajax({
+type: "POST",
+
+url: '/Home/SelectedData',
+
+data: '{obj: ' + JSON.stringify(row) + '}',
+
+dataType: "json",
+
+success: function (data) {
+;
+alert("success");
+
+
+},
+
+error: function (xhr, ajaxOptions, thrownError) {
+alert('Failed to retrieve data.');
+}
+});
+})
+});
+
 //////////////////For Role Set///////////////////////////////
 https://www.c-sharpcorner.com/article/role-based-menus-in-asp-net-mvc/
 https://www.mediafire.com/file/4a1z136attnebaf/AuthenticationDemo.zip/file
