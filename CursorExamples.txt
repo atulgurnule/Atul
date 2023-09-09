@@ -1,0 +1,81 @@
+SET NOCOUNT ON;
+DECLARE @EmployeeID INT;
+DECLARE @Name NVARCHAR(MAX);
+DECLARE @Position NVARCHAR(MAX); 
+DECLARE @Office NVARCHAR(MAX);
+DECLARE @Age int;
+DECLARE @Salary int;
+
+					
+
+
+DECLARE EMP_CURSOR CURSOR
+    LOCAL FORWARD_ONLY FOR
+    SELECT * FROM Employee;
+
+OPEN EMP_CURSOR;
+FETCH NEXT FROM EMP_CURSOR INTO @EmployeeID, @Name, @Position, @Office,@Age,@Salary;
+
+WHILE @@FETCH_STATUS = 0
+BEGIN
+    --UPDATE STATUS
+	-- INSERT WITH assigned_to_id
+    PRINT 'EMP_ID: ' + CONVERT(NVARCHAR(MAX), @EmployeeID) + '  EMP_NAME: ' + @Name + '  POSITION: ' + CONVERT(NVARCHAR(MAX), @Position) + '  Office: ' + @Office + ' AGE: ' + CONVERT(NVARCHAR(MAX),@Age) + ' SALARY: ' + CONVERT(NVARCHAR(MAX),@Salary) ;
+    FETCH NEXT FROM EMP_CURSOR INTO @EmployeeID, @Name, @Position, @Office, @Age,@Salary;;
+END;
+
+CLOSE EMP_CURSOR;
+DEALLOCATE EMP_CURSOR;
+
+----------------------------------------------------------------------
+SET NOCOUNT ON;
+DECLARE @EmployeeID INT;
+DECLARE @Name NVARCHAR(MAX);
+DECLARE @Position NVARCHAR(MAX); 
+DECLARE @Office NVARCHAR(MAX);
+DECLARE @Age int;
+DECLARE @Salary int;
+
+					
+
+
+DECLARE EMP_CURSOR CURSOR
+    LOCAL STATIC  FOR
+    SELECT * FROM Employee;
+
+OPEN EMP_CURSOR;
+IF @@CURSOR_ROWS > 0
+BEGIN 
+FETCH NEXT FROM EMP_CURSOR INTO @EmployeeID, @Name, @Position, @Office,@Age,@Salary;
+
+WHILE @@FETCH_STATUS = 0
+	BEGIN
+		--UPDATE STATUS
+		-- INSERT WITH assigned_to_id
+		PRINT 'EMP_ID: ' + CONVERT(NVARCHAR(MAX), @EmployeeID) + '  EMP_NAME: ' + @Name + '  POSITION: ' + CONVERT(NVARCHAR(MAX), @Position) + '  Office: ' + @Office + ' AGE: ' + CONVERT(NVARCHAR(MAX),@Age) + ' SALARY: ' + CONVERT(NVARCHAR(MAX),@Salary) ;
+		FETCH NEXT FROM EMP_CURSOR INTO @EmployeeID, @Name, @Position, @Office, @Age,@Salary;
+	END
+END;
+
+CLOSE EMP_CURSOR;
+DEALLOCATE EMP_CURSOR;
+--SET NOCOUNT OFF 
+-------------------------------------------------------------------------
+ SET NOCOUNT ON;
+
+DECLARE @CustomerID nvarchar(70);  
+DECLARE Merge_Cursor CURSOR FAST_FORWARD FOR  
+Select CustomerID from Customers  
+  
+Open Merge_Cursor  
+FETCH NEXT FROM Merge_Cursor INTO @CustomerID  
+WHILE @@FETCH_STATUS = 0  
+BEGIN  
+  
+UPDATE Customers  SET ModifiedDate= getdate() WHERE ModifiedDate is null; 
+   
+  FETCH NEXT FROM Merge_Cursor INTO @CustomerID  
+END  
+  
+CLOSE Merge_Cursor  
+DEALLOCATE Merge_Cursor  
