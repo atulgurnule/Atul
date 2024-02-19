@@ -1,6 +1,9 @@
+
+///////////////////////////////////////////////////////////////////////////////////////////
 for Upload and Downoad images in S3 bucket.
 https://codewithmukesh.com/blog/working-with-aws-s3-using-aspnet-core/
-
+https://github.com/iammukeshm/aws-s3-dotnet-webapi/tree/main/S3.Demo.API
+///////////////////////////////////////////////////////////////////////////////////////////
 Get value from datatable while select checkbox checked
 
 https://www.aspsnippets.com/questions/821533/Get-rows-Id-for-Checked-CheckBoxes-in-jQuery-DataTable-in-ASPNet-MVC/
