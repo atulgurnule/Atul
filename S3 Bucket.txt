@@ -62,3 +62,45 @@ namespace AWS
         }
     }
 }
+-----------------------------------------------------------------------------------------------------------------------------
+https://tutexchange.com/uploading-downloading-and-deleting-files-in-aws-s3-cloud-storage-using-asp-net-core/
+
+ public async Task<IActionResult> DownloadFile(int id)
+        {
+            try
+            {
+                var getdocument = _documentdata.GetDocumentbyDocumentId(id);
+                var credentials = new BasicAWSCredentials(_appSettings.AccessKey, _appSettings.SecretKey);
+                var config = new AmazonS3Config
+                {
+                    RegionEndpoint = Amazon.RegionEndpoint.APSouth1
+                };
+                using var client = new AmazonS3Client(credentials, config);
+                var fileTransferUtility = new TransferUtility(client);
+
+                var objectResponse = await fileTransferUtility.S3Client.GetObjectAsync(new GetObjectRequest()
+                {
+                    BucketName = _appSettings.BucketName,
+                    Key = getdocument.DocumentName
+                });
+
+                if (objectResponse.ResponseStream == null)
+                {
+                    return NotFound();
+                }
+                return File(objectResponse.ResponseStream, objectResponse.Headers.ContentType, getdocument.DocumentName);
+            }
+            catch (AmazonS3Exception amazonS3Exception)
+            {
+                if (amazonS3Exception.ErrorCode != null
+                    && (amazonS3Exception.ErrorCode.Equals("InvalidAccessKeyId") || amazonS3Exception.ErrorCode.Equals("InvalidSecurity")))
+                {
+                    throw new Exception("Check the provided AWS Credentials.");
+                }
+                else
+                {
+                    throw new Exception("Error occurred: " + amazonS3Exception.Message);
+                }
+            }
+
+        }
