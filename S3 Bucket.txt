@@ -1,0 +1,64 @@
+Sample code for Download/Delete
+--------------------------------------------------------
+using System;
+using Amazon.S3.Transfer;
+using Amazon;
+using Amazon.S3.Model;
+using System.Configuration;
+
+namespace AWS
+{
+    class Program
+    {
+        public  static void Main(string[] args)
+        {
+            Program program = new Program();
+            program.DownloadFile();
+            program.DeleteFile();
+        }
+      
+        //Download  a file from aws s3 bucket into our app..
+        public void DownloadFile()
+        {
+            var accesskey = ConfigurationManager.AppSettings["AWSAccessKey"];
+            var secretkey = ConfigurationManager.AppSettings["AWSSecretAccessKey"];
+            RegionEndpoint bucketRegion = RegionEndpoint.APSouth1;
+            var bucketName = ConfigurationManager.AppSettings["AWSS3BucketName"];
+
+
+            string filePath = "F:\\audiofromaws.wav";
+
+            using (TransferUtility transferUtility = new Amazon.S3.Transfer.TransferUtility(accesskey, secretkey, bucketRegion))
+            {
+                TransferUtilityDownloadRequest downloadRequest = new TransferUtilityDownloadRequest
+                {
+                    BucketName = bucketName,
+                    Key = "SampleAudio2.wav",//filename or objectname which u want to downlaod from  bucket
+                    FilePath = filePath,
+                };
+                transferUtility.Download(downloadRequest);
+
+            }
+        }
+        //deleting a file in AWS S3 bucket.
+        public void DeleteFile()
+        {
+            var accesskey = ConfigurationManager.AppSettings["AWSAccessKey"];
+            var secretkey = ConfigurationManager.AppSettings["AWSSecretAccessKey"];
+            RegionEndpoint bucketRegion = RegionEndpoint.APSouth1;
+            var bucketName = ConfigurationManager.AppSettings["AWSS3BucketName"];
+
+
+            var client = new Amazon.S3.AmazonS3Client(accesskey, secretkey, bucketRegion);
+
+            DeleteObjectRequest request = new DeleteObjectRequest
+            {
+                BucketName = bucketName,
+                Key = "SampleAudio2.wav",//filename  or objectname which u want to delete in bucket
+
+            };
+            var response = client.DeleteObjectAsync(request).Result;
+            var IsDeleted = response.DeleteMarker;
+        }
+    }
+}
